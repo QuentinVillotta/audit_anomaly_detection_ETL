@@ -1,0 +1,65 @@
+asset_uid: a7Ttgjamsjep2KJxXZ4vbt
+kobo_server: kobo.impact-initiatives.org
+
+kobo_credentials: Token fd289a214002efe39f4ffc888fce6d87ebd71e52
+
+project_short: HSOS_RD11
+
+data_columns:
+  enum_id: 
+    mapping: G_basic_information/enumerator_id
+    dtype: str     
+  audit_id: 
+    mapping: _uuid
+    dtype: str    
+  start:
+    mapping: start
+    dtype: str            
+
+# Audit Data : usually these columns remain consistent, else change to fit your file
+audit_columns: 
+  event:
+    mapping: event
+    dtype: str       
+  node: 
+    mapping : node
+    dtype: str
+  start: 
+    mapping: start
+    dtype: float
+  end:
+    mapping: end
+    dtype: float
+  old-value:
+    mapping: old-value
+    dtype: str
+  new-value:
+    mapping: new-value
+    dtype: str
+  latitude:
+    mapping: latitude
+    dtype: float
+  longitude:
+    mapping: longitude
+    dtype: float
+  accuracy:
+    mapping: accuracy
+    dtype: float
+
+# Questionnaire : usually these columns remain consistent, else change to fit your file
+questionnaire_columns: 
+  name: 
+    mapping: name
+    dtype: str
+  constraint: 
+    mapping: constraint
+    dtype: str
+  type: 
+    mapping: type
+    dtype: str
+  relevant: 
+    mapping: relevant
+    dtype: str
+
+url: https://${kobo_server}/api/v2/assets/${asset_uid}/data/?format=json
+url_questionnaire: https://${kobo_server}/api/v2/assets/${asset_uid}/?format=json

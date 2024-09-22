@@ -1,0 +1,21 @@
+# This is a boilerplate parameters config generated for pipeline 'data_download'
+# using Kedro 0.19.2.
+#
+# Documentation for this file format can be found in "Parameters"
+# Link: https://docs.kedro.org/en/0.19.2/configuration/parameters.html
+
+
+# Kobo API Keywords
+# Raw data
+api_data_key: results
+api_audit_location_key: _attachments
+api_audit_url_key: download_url
+# Questionnaire
+api_questionnaire_location_key: content
+api_questionnaire_survey_key: survey
+# Credentials
+kobo_credentials: ${globals:kobo_credentials}
+
+# Dask Cluster Params
+dask_nb_worker: 5
+dask_nb_thread_per_worker: 3

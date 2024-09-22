@@ -1,0 +1,123 @@
+# 01 raw data
+00_kobo_api_raw_data:
+  type: api.APIDataset
+  url: ${globals:url}
+  method: GET
+  load_args:
+    headers:
+      Authorization: ${globals:kobo_credentials}
+  metadata:
+    kedro-viz:
+      layer: 01_raw
+
+01_raw_data:
+  type: json.JSONDataset
+  filepath: data/01_raw/${globals:project_short}/raw_data.json
+  metadata:
+    kedro-viz:
+      layer: 01_raw
+
+# Audit data
+01_raw_audit:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/${globals:project_short}/audit_data.csv
+  metadata:
+    kedro-viz:
+      layer: 01_raw
+
+# Questionnaire
+00_kobo_api_questionnaire:
+  type: api.APIDataset
+  url: ${globals:url_questionnaire}
+  method: GET
+  load_args:
+    headers:
+      Authorization: ${globals:kobo_credentials}
+  metadata:
+    kedro-viz:
+      layer: 01_raw
+
+01_questionnaire:
+  type: pandas.ExcelDataset
+  filepath: data/01_raw/${globals:project_short}/questionnaire.xlsx
+  metadata:
+    kedro-viz:
+      layer: 01_raw
+
+# 02 Intermediate
+
+02_intermediate_audit:
+  type: pandas.CSVDataset
+  filepath: data/02_intermediate/${globals:project_short}/audit.csv
+  metadata:
+    kedro-viz:
+      layer: 02_intermediate
+
+02_intermediate_raw_data:
+  type: pandas.CSVDataset
+  filepath: data/02_intermediate/${globals:project_short}/raw_data.csv
+  metadata:
+    kedro-viz:
+      layer: 02_intermediate
+
+02_intermediate_questionnaire:
+  type: pandas.ExcelDataset
+  filepath: data/02_intermediate/${globals:project_short}/questionnaire.xlsx
+  metadata:
+    kedro-viz:
+      layer: 02_intermediate
+
+# 03 Features
+
+03_features:
+  type: pandas.ExcelDataset
+  filepath: data/03_features/${globals:project_short}/features.xlsx
+  metadata:
+    kedro-viz:
+      layer: 03_features
+
+03_features_scaled:
+  type: pandas.ExcelDataset
+  filepath: data/03_features/${globals:project_short}/features_scaled.xlsx
+  metadata:
+    kedro-viz:
+      layer: 03_features
+
+# 04 Models
+
+04_trained_models:
+  type: pickle.PickleDataset
+  filepath: data/04_models/trained_models.pkl
+  metadata:
+    kedro-viz:
+      layer: 04_models
+
+# 05 Model ouput
+
+05_output_model:
+  type: pickle.PickleDataset
+  filepath: data/05_model_output/output_model.pkl
+  metadata:
+    kedro-viz:
+      layer: 05_model_output
+
+# 05_raw_features_predict_and_score:
+#   type: pandas.ExcelDataset
+#   filepath: data/05_model_output/${globals:project_short}/raw_features_predictions_and_scores.xlsx
+#   metadata:
+#     kedro-viz:
+#       layer: 05_model_output
+
+# 05_raw_data_predict_and_score:
+#   type: pandas.ExcelDataset
+#   filepath: data/05_model_output/${globals:project_short}/raw_data_predictions_and_scores.xlsx
+#   metadata:
+#     kedro-viz:
+#       layer: 05_model_output
+
+# 05_SHAP_interpretation:
+#   type: pickle.PickleDataset
+#   filepath: data/05_model_output/${globals:project_short}/SHAP_interpretation.pkl
+#   metadata:
+#     kedro-viz:
+#       layer: 05_model_output

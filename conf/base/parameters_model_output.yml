@@ -1,0 +1,18 @@
+# This is a boilerplate parameters config generated for pipeline 'model_predict_interpretability'
+# using Kedro 0.19.3.
+#
+# Documentation for this file format can be found in "Parameters"
+# Link: https://docs.kedro.org/en/0.19.3/configuration/parameters.html
+
+
+model_output:
+  audit_id: "audit_id"
+  raw_audit_id: ${globals:raw_data_columns.audit_id.mapping} 
+  enum_id: "enum_id"
+  raw_enum_id: ${globals:raw_data_columns.enum_id.mapping} 
+  models_to_invert_score:
+  - 'IsolationForest'
+  - 'OneClassSVM'
+  - 'LOF'
+
+
