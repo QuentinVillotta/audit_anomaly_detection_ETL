@@ -3,23 +3,27 @@ import yaml
 import subprocess
 import os
 
-# Charger le fichier YAML initial depuis le chemin spécifié
+# App Parameters
+# Set the page to open in wide layout mode
+st.set_page_config(layout="wide")
+
+# Load the initial YAML file from the specified path
 input_file_path = "conf/base/globals_generic.yml"
 output_file_path = "conf/base/globals.yml"
 
 with open(input_file_path, 'r') as file:
     config = yaml.safe_load(file)
 
-# Titre de l'application
+# Application title
 st.title("Configuration Form")
 
-# Fonction pour afficher et modifier un dictionnaire dans un formulaire
+# Function to display and modify a dictionary in a form
 def render_form(config_dict, parent_key='', inside_expander=False):
     updated_dict = {}
     for key, value in config_dict.items():
         full_key = f"{parent_key}.{key}" if parent_key else key  # Unique key for each field
         
-        if key in ['url', 'url_questionnaire']:  # Ne pas afficher ces paramètres
+        if key in ['url', 'url_questionnaire']:  # Skip these parameters
             continue
         
         if key in ['raw_data_columns', 'audit_columns', 'questionnaire_columns'] and not inside_expander:
@@ -66,7 +70,7 @@ def render_form(config_dict, parent_key='', inside_expander=False):
 
     return updated_dict
 
-# Champs obligatoires
+# Mandatory fields
 mandatory_fields = ["asset_uid", "project_short", "kobo_credentials", 
                     "raw_data_columns.enum_id.mapping", "raw_data_columns.enum_id.dtype",
                     "raw_data_columns.audit_id.mapping", "raw_data_columns.audit_id.dtype"]
@@ -79,44 +83,54 @@ with col1:
 
     missing_fields = []
     for field in mandatory_fields:
-        keys = field.split('.')  # Divisez les champs en une liste de clés
+        keys = field.split('.')  # Split the field into a list of keys
         current_dict = updated_config
         for key in keys:
-            current_dict = current_dict.get(key)  # Accédez à chaque niveau
+            current_dict = current_dict.get(key)  # Access each level
             if current_dict is None:
                 break
         if not current_dict:
             missing_fields.append(field)
 
-
     if missing_fields:
         st.error(f"Mandatory fields missing: {', '.join(missing_fields)}")
 
-    # Générer les URLs dans l'output, ne pas les afficher dans le formulaire
+    # Generate URLs in the output, do not display them in the form
     updated_config['url'] = f"https://{updated_config['kobo_server']}/api/v2/assets/{updated_config['asset_uid']}/data/?format=json"
     updated_config['url_questionnaire'] = f"https://{updated_config['kobo_server']}/api/v2/assets/{updated_config['asset_uid']}/?format=json"
 
-
+# Function to run the Kedro pipeline and capture logs
 def run_kedro():
     with st.spinner("Running the pipeline, this may take a few minutes. Please wait."):
         process = subprocess.Popen(['kedro', 'run'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-        # Utilisation d'un espace réservé pour les logs
+        # Use a placeholder for logs
         log_placeholder = st.empty()
 
-        # Lire les logs en temps réel
+        # List to store the last few log lines
+        log_lines = []
+
+        # Read the logs in real-time
         while True:
             output = process.stdout.readline()
             if output == '' and process.poll() is not None:
                 break
             if output:
-                log_placeholder.text(output.strip())
+                # Add the line to the logs
+                log_lines.append(output.strip())
 
-        # Vérifier les erreurs de sortie
+                # Keep only the last 20 lines
+                if len(log_lines) > 17:
+                    log_lines.pop(0)
+
+                # Display the last 5 lines in the placeholder
+                log_placeholder.text("\n".join(log_lines))
+
+        # Check for stderr output (errors)
         stderr_output = process.stderr.read()
         if stderr_output:
             log_placeholder.error(stderr_output.strip())
-            st.error("An error occurred while running pipeline. Please check the logs.")
+            st.error("An error occurred while running the pipeline. Please check the logs.")
         else:
             st.success("Pipeline run completed successfully!")
 
@@ -128,10 +142,10 @@ with col2:
                 yaml.dump(updated_config, file, default_flow_style=False)
             # st.success(f"File saved as '{output_file_path}'.")
 
-            # Exécutez kedro run et montrez les logs
+            # Run kedro and display logs
             run_kedro()
 
-            # Affichez le bouton de téléchargement
+            # Show download button for output file
             if os.path.exists('data/05_model_output/output_model.pkl'):
                 with open('data/05_model_output/output_model.pkl', 'rb') as f:
                     st.download_button('Download output file', f, file_name='output_model.pkl')
