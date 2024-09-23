@@ -11,11 +11,35 @@ st.set_page_config(layout="wide")
 input_file_path = os.path.join("conf", "base", "globals_template.yml")
 output_file_path = os.path.join("conf", "base", "globals.yml")
 
+# Output files path to export
+model_output_path = os.path.join("data", "05_model_output", "output_model.pkl")
+prediction_path = os.path.join("data", "05_model_output", "raw_features_predictions_and_scores.xlsx")
+
+def delete_file(file_path):
+    try:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        else:
+            st.write(f"File not found: {file_path}")
+    except Exception as e:
+        st.write(f"Error deleting file {file_path}: {e}")
+
+
+# Init counter click button
+if 'click_count' not in st.session_state:
+    st.session_state.click_count = 0
+
+if st.session_state.click_count == 0:  
+    delete_file(model_output_path)
+    delete_file(prediction_path)
+
+
 with open(input_file_path, 'r') as file:
     config = yaml.safe_load(file)
 
 # Application title
 st.title("Configuration Form")
+
 
 # Function to display and modify a dictionary in a form
 def render_form(config_dict, parent_key='', inside_expander=False):
@@ -135,25 +159,24 @@ def run_kedro():
             st.success("Pipeline run completed successfully!")
 
 with col2:
-    st.header("Output")
+    st.header("Run")
+
     if st.button("Run Anomaly Detection"):
+        st.session_state.click_count += 1
         if not missing_fields:
             with open(output_file_path, 'w') as file:
                 yaml.dump(updated_config, file, default_flow_style=False)
-            # st.success(f"File saved as '{output_file_path}'.")
 
             # Run kedro and display logs
             run_kedro()
-
-            # Show download button for output file
-            model_output_path = os.path.join("data", "05_model_output", "output_model.pkl")
-            prediction_path = os.path.join("data", "05_model_output", "raw_features_predictions_and_scores.xlsx")
-
-            if os.path.exists(model_output_path):
-                with open(model_output_path, 'rb') as f:
-                    st.download_button('Download output file', f, file_name='output_model.pkl')
-            if os.path.exists(prediction_path):
-                with open(prediction_path, 'rb') as f:
-                    st.download_button('Download prediction file', f, file_name='prediction.xlsx')
         else:
             st.error("Please fill out all mandatory fields.")
+
+    st.header("Outputs")  
+    if os.path.exists(model_output_path):
+        with open(model_output_path, 'rb') as f:
+            st.download_button('Download output file', f, file_name='output_model.pkl')
+    if os.path.exists(prediction_path):
+        with open(prediction_path, 'rb') as f:
+            st.download_button('Download prediction file', f, file_name='prediction.xlsx')
+
