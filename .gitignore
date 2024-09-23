@@ -1,6 +1,7 @@
 ##########################
 # KEDRO PROJECT
 
+
 # Debug/test files 
 debug/*
 main_test.sh
@@ -12,6 +13,7 @@ dev/*
 # ignore all local configuration
 conf/local/**
 !conf/local/.gitkeep
+conf/base/globals.yml
 
 # ignore potentially sensitive credentials files
 conf/**/*credentials*

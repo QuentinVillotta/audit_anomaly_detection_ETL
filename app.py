@@ -8,8 +8,8 @@ import os
 st.set_page_config(layout="wide")
 
 # Load the initial YAML file from the specified path
-input_file_path = "conf/base/globals_generic.yml"
-output_file_path = "conf/base/globals.yml"
+input_file_path = os.path.join("conf", "base", "globals_template.yml")
+output_file_path = os.path.join("conf", "base", "globals.yml")
 
 with open(input_file_path, 'r') as file:
     config = yaml.safe_load(file)
@@ -136,7 +136,7 @@ def run_kedro():
 
 with col2:
     st.header("Output")
-    if st.button("Save and Run Pipeline"):
+    if st.button("Run Anomaly Detection"):
         if not missing_fields:
             with open(output_file_path, 'w') as file:
                 yaml.dump(updated_config, file, default_flow_style=False)
@@ -146,9 +146,14 @@ with col2:
             run_kedro()
 
             # Show download button for output file
-            if os.path.exists('data/05_model_output/output_model.pkl'):
-                with open('data/05_model_output/output_model.pkl', 'rb') as f:
-                    st.download_button('Download output file', f, file_name='output_model.pkl')
+            model_output_path = os.path.join("data", "05_model_output", "output_model.pkl")
+            prediction_path = os.path.join("data", "05_model_output", "raw_features_predictions_and_scores.xlsx")
 
+            if os.path.exists(model_output_path):
+                with open(model_output_path, 'rb') as f:
+                    st.download_button('Download output file', f, file_name='output_model.pkl')
+            if os.path.exists(prediction_path):
+                with open(prediction_path, 'rb') as f:
+                    st.download_button('Download prediction file', f, file_name='prediction.xlsx')
         else:
             st.error("Please fill out all mandatory fields.")

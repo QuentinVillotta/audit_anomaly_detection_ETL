@@ -17,5 +17,5 @@ api_questionnaire_survey_key: survey
 kobo_credentials: ${globals:kobo_credentials}
 
 # Dask Cluster Params
-dask_nb_worker: 5
-dask_nb_thread_per_worker: 3
+dask_nb_worker: 10
+dask_nb_thread_per_worker: 1

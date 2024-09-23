@@ -1,20 +1,20 @@
 asset_uid: a7Ttgjamsjep2KJxXZ4vbt
-kobo_server: kobo.impact-initiatives.org
+kobo_server: 
 
-kobo_credentials: Token fd289a214002efe39f4ffc888fce6d87ebd71e52
+kobo_credentials: 
 
 project_short: HSOS_RD11
 
-data_columns:
+raw_data_columns:
   enum_id: 
     mapping: G_basic_information/enumerator_id
-    dtype: str     
+    dtype: str      
   audit_id: 
     mapping: _uuid
-    dtype: str    
-  start:
+    dtype: str
+  start_time:
     mapping: start
-    dtype: str            
+    dtype: str       
 
 # Audit Data : usually these columns remain consistent, else change to fit your file
 audit_columns: 
