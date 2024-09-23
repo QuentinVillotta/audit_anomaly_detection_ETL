@@ -160,7 +160,6 @@ def run_kedro():
 
 with col2:
     st.header("Run")
-
     if st.button("Run Anomaly Detection"):
         st.session_state.click_count += 1
         if not missing_fields:
