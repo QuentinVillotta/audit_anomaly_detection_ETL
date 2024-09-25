@@ -2,31 +2,12 @@ import streamlit as st
 import shap
 import streamlit.components.v1 as components
 import matplotlib.pyplot as plt
+from app_utils import plot_tools as pt
 
 # Params
 SURVEY_ID_VAR = 'audit_id'
 
 # Functions 
-def st_shap(plot, height=None):
-     shap_html = f"<head>{shap.getjs()}</head><body>{plot.html()}</body>"
-     components.html(shap_html, height=height)
-
-@st.fragment
-def id_survey_shap_force_plot(survey_id_var, selected_survey, data, shap_values ) -> None:
-     index_survey= data[data[survey_id_var] == selected_survey].index[0]
-     shap_index_survey = data.index.get_loc(index_survey)
-     fig = shap.force_plot(shap_values[shap_index_survey])
-     st_shap(fig)
-
-@st.fragment
-def id_survey_shap_bar_plot(survey_id_var, selected_survey, data, shap_values) -> None:
-
-     nb_features = shap_values.data.shape[1]
-     index_survey= data[data[survey_id_var] == selected_survey].index[0]
-     shap_index_survey = data.index.get_loc(index_survey)
-     fig, ax = plt.subplots()
-     shap.plots.bar(shap_values[shap_index_survey],  max_display=nb_features, show=False, ax=ax)
-     st.pyplot(fig)
 
 def display():
      sub_tab1, sub_tab2 = st.tabs(["Global Interpretation", "Local Interpretation"])
@@ -59,12 +40,12 @@ def display():
 
                sub_sub2_tab1, sub_sub2_tab2 = st.tabs(["Feature Importance", "Force Plot"])
                with sub_sub2_tab1:
-                    id_survey_shap_bar_plot(SURVEY_ID_VAR, 
-                                             selected_survey, 
-                                             features, 
-                                             shap_values)
+                    pt.id_survey_shap_bar_plot(SURVEY_ID_VAR, 
+                                               selected_survey, 
+                                               features, 
+                                               shap_values)
                with sub_sub2_tab2:
-                    id_survey_shap_force_plot(survey_id_var=SURVEY_ID_VAR, 
-                                                  selected_survey=selected_survey, 
-                                                  data=features,
-                                                  shap_values=shap_values)
+                    pt.id_survey_shap_force_plot(survey_id_var=SURVEY_ID_VAR, 
+                                                 selected_survey=selected_survey, 
+                                                 data=features,
+                                                 shap_values=shap_values)
