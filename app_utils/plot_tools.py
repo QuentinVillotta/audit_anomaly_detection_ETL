@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import seaborn as sns
 import streamlit as st
 import matplotlib.pyplot as plt
@@ -29,37 +30,95 @@ def classify_variable_types(df, threshold=20):
 
     return variable_types
 
+def freedman_diaconis_rule(data):
+    q25, q75 = np.percentile(data, [25, 75])
+    iqr = q75 - q25
+    bin_width = 2 * iqr * len(data) ** (-1/3)
+    bins = int((data.max() - data.min()) / bin_width)
+    return bins
 
+# Univariate Analysis
 @st.fragment
-def univariate_ploting(df, variable, hue, variable_types ) -> None:
+def univariate_ploting(df, X, hue, variable_types ) -> None:
      fig, (ax_box, ax_hist) = plt.subplots(2, sharex=True, gridspec_kw={"height_ratios": (.15, .85)})
      # assigning a graph to each ax
-     if variable_types[variable] == 'discrete':
+     if variable_types[X] == 'discrete':
           # Count plot
-          g_bp = sns.boxplot(data = df, x = variable, hue=hue,
-                             orient="h", ax=ax_box, legend=False)
-          g_hist = sns.countplot(data=df, x=variable, hue= hue, 
-                              ax=ax_hist)
+          sns.boxplot(data = df, x = X, hue=hue,
+                      orient="h", ax=ax_box, legend=False)
+          sns.countplot(data=df, x=X, hue= hue, ax=ax_hist)
           # Remove x axis name for the boxplot
           ax_box.set(xlabel='')
 
-     elif variable_types[variable] == 'non-numeric':  # New case for non-numeric variables
+     elif variable_types[X] == 'non-numeric':  # New case for non-numeric variables
           # Count plot for non-numeric variables
-          g_hist = sns.countplot(data=df, x=variable, hue=hue, ax=ax_hist)
+          sns.countplot(data=df, x=X, hue=hue, ax=ax_hist)
           ax_hist.set_xticklabels(ax_hist.get_xticklabels(), rotation=90)
           # Set title and remove boxplot since it doesn't make sense for non-numeric
-          # ax_hist.set_title(f"Count plot of {variable}")
           ax_box.axis('off')  # Hide the boxplot
      else:
           # Histogram
-          g_bp = sns.boxplot(data = df, x = variable, hue=hue,
-          orient="h", ax=ax_box, legend=False)
-          g_hist = sns.histplot(data=df, x=variable, hue= hue, 
-                              stat="density",  element="step", common_norm=False, 
-                              ax=ax_hist)
+          sns.boxplot(data = df, x = X, hue=hue,
+                             orient="h", ax=ax_box, legend=False)
+          sns.histplot(data=df, x=X, hue= hue, 
+                        stat="density",  element="step", common_norm=False, 
+                        ax=ax_hist)
           # Remove x axis name for the boxplot
           ax_box.set(xlabel='')
      return(fig)
+
+# Bivariate Analysis 
+@st.fragment
+def kernel_density_plot(df, X, Y, hue) -> None:
+    fig = sns.JointGrid(data=df, x=X, y=Y,  hue=hue)
+    fig.plot_joint(sns.kdeplot, fill=False, alpha=0.4, common_norm=True, warn_singular=False)
+    fig.plot_joint(sns.rugplot, height=-.02, clip_on=False, alpha=.5 )
+    fig.plot_marginals(sns.boxplot)
+    return fig
+
+@st.fragment
+def catplot_multicat(df, X, Y, hue, variable_types) -> None:
+    if variable_types[X] == 'discrete':
+        fig = sns.catplot(data=df, x=X, y =Y, hue=hue, kind="bar",
+                          estimator='mean', errorbar=('ci', 95))
+    else:
+        num_bins = freedman_diaconis_rule(df[X])
+        df['quantitative_var_binned'] = pd.cut(df[X], bins=num_bins)
+        fig = sns.catplot(data=df, x="quantitative_var_binned", y =Y, hue=hue, 
+                          kind="bar", estimator='mean', errorbar=('ci', 95))
+        fig.set(xlabel=X)
+    fig.tick_params(axis='x', rotation=90)
+    return fig
+
+@st.fragment
+def displot(df, X, Y, hue) -> None:
+    fig = sns.displot(df, x=X, y=Y, col=hue, rug=True)   
+    return fig
+
+
+# def bivariate_ploting(df, X, Y, hue, variable_types) -> None:
+#     #  Bivariate plot
+#     g1 = sns.JointGrid(data=df, x=X, y=Y,  hue=hue)
+#     g1.plot_joint(sns.kdeplot, fill=False, alpha=0.4, common_norm=True)
+#     g1.plot_joint(sns.rugplot, height=-.02, clip_on=False, alpha=.5 )
+#     g1.plot_marginals(sns.boxplot)
+
+#     #  Bivariate plot
+#     if variable_types[X] == 'discrete':
+#         # Cat plot
+#         g2 = sns.catplot(data=df, x=X, y =Y, hue=hue, kind="bar",
+#                          estimator='mean', errorbar=('ci', 95))
+#     else:
+#         num_bins = freedman_diaconis_rule(df[X])
+#         df['quantitative_var_binned'] = pd.cut(df[X], bins=num_bins)
+#         g2 = sns.catplot(data=df, x="quantitative_var_binned", y =Y, hue=hue, 
+#                          kind="bar", estimator='mean', errorbar=('ci', 95))
+#         g2.set(xlabel=X)
+#     g2.tick_params(axis='x', rotation=90)
+
+#     # Dis plot by deleted reason (col)
+#     g3 = sns.displot(df, x=X, y=Y, col=hue, rug=True)
+#     return g1, g2, g3
 
 
 # SHAP Plot

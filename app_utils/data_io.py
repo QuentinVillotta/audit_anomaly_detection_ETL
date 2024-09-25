@@ -2,6 +2,7 @@ import pandas as pd
 import yaml
 import os
 import subprocess
+import io
 import streamlit as st
 
 # Welcome Page - Configuration Form 
@@ -99,3 +100,10 @@ def run_kedro():
             st.error("An error occurred while running the pipeline. Please check the logs.")
         else:
             st.success("Pipeline run completed successfully!")
+
+# Function to save plots as PNG and return bytes
+def save_plot_as_png(fig, format="eps", dpi=1000):
+    buf = io.BytesIO()
+    fig.savefig(buf, format=format, dpi=dpi)
+    buf.seek(0)
+    return buf

@@ -10,7 +10,7 @@ SURVEY_ID_VAR = 'audit_id'
 # Functions 
 
 def display():
-     sub_tab1, sub_tab2 = st.tabs(["Global Interpretation", "Local Interpretation"])
+     sub_tab1, sub_tab2 = st.tabs(["Local Interpretation", "Global Interpretation"])
      if st.session_state.ETL_output:
           # Extract Interpretation data
           interpretation_data =  st.session_state.ETL_output['SHAP_interpretation']
@@ -21,13 +21,9 @@ def display():
           features = interpretation_data['features']
           shap_data = features.drop(SURVEY_ID_VAR, axis=1)
      
+          
           with sub_tab1:
-               nb_features = len(shap_data.columns)
-               fig, ax = plt.subplots()
-               shap.plots.bar(shap_values, max_display=nb_features, show=False, ax=ax)
-               st.pyplot(fig)
-          with sub_tab2:
-               survey_id = features[SURVEY_ID_VAR]
+               survey_id = predic_data[SURVEY_ID_VAR]
                selected_survey = st.selectbox("Select an survey ID", survey_id)
 
                col1, col2 = st.columns(2)
@@ -49,3 +45,8 @@ def display():
                                                  selected_survey=selected_survey, 
                                                  data=features,
                                                  shap_values=shap_values)
+          with sub_tab2:
+               nb_features = len(shap_data.columns)
+               fig, ax = plt.subplots()
+               shap.plots.bar(shap_values, max_display=nb_features, show=False, ax=ax)
+               st.pyplot(fig)
