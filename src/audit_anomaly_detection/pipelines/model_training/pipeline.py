@@ -12,7 +12,7 @@ def create_pipeline(**kwargs) -> Pipeline:
         [
         node(
             nodes.fit_models,
-                inputs=["memory_03_features_scaled", "params:models"],
+                inputs=["03_features_scaled", "params:models"],
                 outputs="04_trained_models"
             )
         ]

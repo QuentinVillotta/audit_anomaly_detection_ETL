@@ -5,6 +5,7 @@ generated using Kedro 0.19.3
 import logging
 from typing import Dict
 import pandas as pd
+import numpy as np
 from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger(__name__)
@@ -248,6 +249,41 @@ def attach_time_per_question_minutes(
     return df
 
 # Node 8
+def attach_nb_value_modifications(
+    df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
+    """
+    Adds a new column to the DataFrame that counts the number of times enumerator 
+    is making question value modification in the survey
+
+    Parameters:
+    ----------
+    df : pd.DataFrame
+        The input DataFrame containing the data.
+    
+    parameters : Dict
+        A dictionary containing the following keys:
+        - 'audit_id': The name of the column used for grouping the data (usually a unique identifier).
+        - 'old_value': The name of the column containing the old values.
+        - 'new_value': The name of the column containing the new values.
+        - 'nb_value_modifications': The name of the new column to be added, which will contain the 
+          count of non-NaN pairs of old and new values for each group.
+    
+    Returns:
+    -------
+    pd.DataFrame
+        The original DataFrame with an additional column as specified in the 'nb_value_modifications' 
+        parameter, containing the count of non-NaN value pairs for each group defined by 'audit_id'.
+
+    """
+    # Compute when both values are not NA
+    df['both_non_null'] = df[[parameters['old_value'], parameters['new_value']]].notna().all(axis=1)
+    # Count by survey number of TRUE
+    df[parameters["nb_value_modifications"]] = df.groupby(parameters['audit_id'])['both_non_null'].transform('sum')
+    # Drop intermediate var
+    df = df.drop(columns=['both_non_null'])
+    return df
+
+# Node 9
 def attach_constraint_note_count(
     audit_df: pd.DataFrame, questionnaire_df: pd.DataFrame, parameters: Dict
 ) -> pd.DataFrame:
@@ -278,7 +314,7 @@ def attach_constraint_note_count(
 
     return audit_df.merge(num_constraints, on=parameters["audit_id"])
 
-# Node 8 -- Inter function
+# Node 9 -- Inter function
 def _count_constraint_notes(
     df: pd.DataFrame, notes: pd.Series, parameters: Dict
 ) -> int:
@@ -298,7 +334,7 @@ def _count_constraint_notes(
         num_notes += audit_questions.str.count(name).sum()
     return num_notes
 
-# Node 9
+# Node 10
 def attach_constraint_backtrack_count(
     audit_df: pd.DataFrame, questionnaire_df: pd.DataFrame, parameters: Dict
 ) -> pd.DataFrame:
@@ -347,7 +383,7 @@ def attach_constraint_backtrack_count(
 
     return audit_df.merge(num_backtracks, on=parameters["audit_id"])
 
-# Node 9 -- Inter function
+# Node 10 -- Inter function
 def _constraint_backtrack(
     audit_df: pd.DataFrame, constraint_matrix_df: pd.DataFrame, parameters: Dict
 ) -> int:
@@ -402,7 +438,7 @@ def _constraint_backtrack(
                     constraint_backtracks += ref_mat_row[ref_question]
     return constraint_backtracks
 
-# Node 10
+# Node 11
 def attach_resume_count(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
     """Counts the number of times the survey is paused and then later resumed.
 
@@ -425,7 +461,7 @@ def attach_resume_count(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
 
     return df.merge(resume_count, on=parameters["audit_id"])
 
-# Node 11
+# Node 12
 def attach_constraint_error_count(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
     """Counts number of times the audit event 'constraint error' is reached.
 
@@ -447,11 +483,11 @@ def attach_constraint_error_count(df: pd.DataFrame, parameters: Dict) -> pd.Data
 
     return df.merge(constraint_errors, on=parameters["audit_id"])
 
-# Node 12
+# Node 13
 def group_dataframe_by_audit_id(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
     return df.groupby(parameters["audit_id"]).first().reset_index()
 
-# Node 13
+# Node 14
 def attach_duration_minimum_outlier(
     df: pd.DataFrame, parameters: Dict
     ) -> pd.DataFrame:
@@ -491,7 +527,7 @@ def attach_duration_minimum_outlier(
     df[parameters['duration_minimum_outlier']] = (df[parameters['duration']] < lower_bound).astype(int)
     return df
 
-# Node 14
+# Node 15
 def keep_selected_features(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
     """
     Returns a Pandas DataFrame with only the specified features.
@@ -506,7 +542,7 @@ def keep_selected_features(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
     """
     return df.loc[:, parameters["features"]]
 
-# Node 15
+# Node 16
 def remove_nans(df: pd.DataFrame) -> pd.DataFrame:
     """
     Removes rows containing NaN values from the input dataframe.
@@ -522,7 +558,7 @@ def remove_nans(df: pd.DataFrame) -> pd.DataFrame:
     df_clean = df.dropna().reset_index(drop=True)
     return df_clean
 
-# Node 16
+# Node 17
 def standard_scaling_input_features(X: pd.DataFrame,  parameters: Dict) -> pd.DataFrame:
     # Remove audit_id column
     X_features = X.drop([parameters['audit_id']], axis=1)

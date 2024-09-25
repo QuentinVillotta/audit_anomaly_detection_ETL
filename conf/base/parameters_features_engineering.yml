@@ -7,6 +7,9 @@
 
 FE_audit_data:
   seconds: "seconds"
+  old_value: "old-value"
+  new_value: "new-value"
+  nb_value_modifications: "nb_value_modifications"
   audit_id: "audit_id"
   full_path: "node"
   event: "event"
@@ -57,6 +60,7 @@ model_input:
     - "time_per_question"
     - "notin_daytime"
     - "largest_relative_pace_increase"
+    - "nb_value_modifications"
     - "resume_count"
     - "constraint_note_count"
     - "constraint_backtracks_count"

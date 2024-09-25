@@ -15,17 +15,17 @@ def create_pipeline(**kwargs) -> Pipeline:
             node(
                 nodes.format_columns,
                 inputs=[
-                    "memory_01_questionnaire",
+                    "01_questionnaire",
                     "params:questionnaire_columns",
                     "params:drop_other_questionnaire_vars"
                 ],
-                outputs="memory_02_intermediate_questionnaire"
+                outputs="02_intermediate_questionnaire"
             ),
         # Raw Data
             node(
                 nodes.format_columns,
                 inputs=[
-                    "memory_01_raw_data",
+                    "01_raw_data",
                     "params:data_columns",
                     "params:drop_other_data_vars"
                 ],
@@ -39,13 +39,13 @@ def create_pipeline(**kwargs) -> Pipeline:
             node(
                 nodes.attach_survey_count,
                 inputs=["memory_feature_start_date", "params:raw_data"],
-                outputs="memory_02_intermediate_raw_data",
+                outputs="02_intermediate_raw_data",
             ),
         # Audit Data
              node(
                 nodes.format_columns,
                 inputs=[
-                    "memory_01_raw_audit",
+                    "01_raw_audit",
                     "params:audit_columns",
                     "params:drop_other_audit_vars"
                 ],
@@ -108,7 +108,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                 nodes.attach_relative_pace, 
                 inputs=["memory_feature_node_base_path",
                         "params:audit_data"],
-                outputs="memory_02_intermediate_audit",
+                outputs="02_intermediate_audit",
             )
         ]
     )

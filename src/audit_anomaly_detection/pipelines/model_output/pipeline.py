@@ -11,7 +11,7 @@ def create_pipeline(**kwargs) -> Pipeline:
         [
         node(
             nodes.get_predict_and_score,
-            inputs=["04_trained_models", "memory_03_features_scaled", "params:model_output"],
+            inputs=["04_trained_models", "03_features_scaled", "params:model_output"],
             outputs=["memory_model_output_predictions", "memory_model_output_scores"],
             ),
         node(
@@ -26,17 +26,17 @@ def create_pipeline(**kwargs) -> Pipeline:
             ),
         node(
             nodes.merge_scores_and_predictions,
-            inputs=["memory_03_features", "memory_anomaly_prediction", "memory_anomaly_score", "memory_01_raw_data", "params:model_output"],
+            inputs=["03_features", "memory_anomaly_prediction", "memory_anomaly_score", "01_raw_data", "params:model_output"],
             outputs="05_raw_features_predict_and_score",
             ),
         node(
             nodes.raw_data_predict_and_scores,
-            inputs=["memory_01_raw_data", "memory_anomaly_prediction", "memory_anomaly_score", "params:model_output"],
+            inputs=["01_raw_data", "memory_anomaly_prediction", "memory_anomaly_score", "params:model_output"],
             outputs="memory_raw_data_predict_and_score",
             ),
         node(
             nodes.SHAP_interpretation,
-            inputs=["04_trained_models", "memory_03_features_scaled", "params:model_output"],
+            inputs=["04_trained_models", "03_features_scaled", "params:model_output"],
             outputs="memory_SHAP_interpretation"
             ),
         node(

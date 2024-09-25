@@ -11,7 +11,7 @@ def create_pipeline(**kwargs) -> Pipeline:
         [
             node(
                 nodes.attach_residual_time_event,  
-                inputs=["memory_02_intermediate_audit", 
+                inputs=["02_intermediate_audit", 
                         "params:FE_audit_data"],
                 outputs="memory_feature_residual_time_event",
             ),
@@ -55,13 +55,21 @@ def create_pipeline(**kwargs) -> Pipeline:
                     "memory_feature_duration_survey_ignoring_pauses_minutes",
                     "params:FE_audit_data",
                 ],
-                outputs="memory_feature_time_per_question",
+                outputs="memory_time_per_question_minutes",
+            ),
+            node(
+                nodes.attach_nb_value_modifications,  
+                inputs=[
+                    "memory_time_per_question_minutes",
+                    "params:FE_audit_data",
+                ],
+                outputs="memory_nb_value_modifications",
             ),
             node(
                 nodes.attach_constraint_note_count, 
                 inputs=[
-                    "memory_feature_time_per_question",
-                    "memory_02_intermediate_questionnaire",
+                    "memory_nb_value_modifications",
+                    "02_intermediate_questionnaire",
                     "params:FE_audit_data",
                 ],
                 outputs="memory_feature_constraint_note_count",
@@ -70,7 +78,7 @@ def create_pipeline(**kwargs) -> Pipeline:
                 nodes.attach_constraint_backtrack_count, 
                 inputs=[
                     "memory_feature_constraint_note_count",
-                    "memory_02_intermediate_questionnaire",
+                    "02_intermediate_questionnaire",
                     "params:FE_audit_data",
                 ],
                 outputs="memory_feature_constraint_backtrack_count",
@@ -113,12 +121,12 @@ def create_pipeline(**kwargs) -> Pipeline:
             node(
                 nodes.remove_nans,
                 inputs="memory_selected_features",
-                outputs="memory_03_features",
+                outputs="03_features",
             ),
             node(
                 nodes.standard_scaling_input_features,
-                inputs=["memory_03_features", "params:FE_audit_data"],
-                outputs="memory_03_features_scaled"
+                inputs=["03_features", "params:FE_audit_data"],
+                outputs="03_features_scaled"
             )
         ]
     )
