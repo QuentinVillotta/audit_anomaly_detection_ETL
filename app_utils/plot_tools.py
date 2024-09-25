@@ -95,32 +95,6 @@ def displot(df, X, Y, hue) -> None:
     fig = sns.displot(df, x=X, y=Y, col=hue, rug=True)   
     return fig
 
-
-# def bivariate_ploting(df, X, Y, hue, variable_types) -> None:
-#     #  Bivariate plot
-#     g1 = sns.JointGrid(data=df, x=X, y=Y,  hue=hue)
-#     g1.plot_joint(sns.kdeplot, fill=False, alpha=0.4, common_norm=True)
-#     g1.plot_joint(sns.rugplot, height=-.02, clip_on=False, alpha=.5 )
-#     g1.plot_marginals(sns.boxplot)
-
-#     #  Bivariate plot
-#     if variable_types[X] == 'discrete':
-#         # Cat plot
-#         g2 = sns.catplot(data=df, x=X, y =Y, hue=hue, kind="bar",
-#                          estimator='mean', errorbar=('ci', 95))
-#     else:
-#         num_bins = freedman_diaconis_rule(df[X])
-#         df['quantitative_var_binned'] = pd.cut(df[X], bins=num_bins)
-#         g2 = sns.catplot(data=df, x="quantitative_var_binned", y =Y, hue=hue, 
-#                          kind="bar", estimator='mean', errorbar=('ci', 95))
-#         g2.set(xlabel=X)
-#     g2.tick_params(axis='x', rotation=90)
-
-#     # Dis plot by deleted reason (col)
-#     g3 = sns.displot(df, x=X, y=Y, col=hue, rug=True)
-#     return g1, g2, g3
-
-
 # SHAP Plot
 def st_shap(plot, height=None):
      shap_html = f"<head>{shap.getjs()}</head><body>{plot.html()}</body>"

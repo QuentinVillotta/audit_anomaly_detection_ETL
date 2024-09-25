@@ -32,8 +32,8 @@ if 'ETL_output' not in st.session_state:
 #     data_io.delete_file(PREDICTION_PATH)
 
 # Menu/Tabs app
-list_tab = ["Welcome", "Summary", "Visualization", "Interpretation"]
-welcome_tab, summary_tab, visualization_tab, interpretation_tab = st.tabs(list_tab)
+list_tab = ["Welcome", "Summary", "Interpretation", "Visualization"]
+welcome_tab, summary_tab, interpretation_tab, visualization_tab= st.tabs(list_tab)
 
 with welcome_tab:
     welcome.display()
@@ -41,8 +41,10 @@ with welcome_tab:
 with summary_tab: 
     summary.display()
 
+with interpretation_tab: 
+    interpretation.display()
+
 with visualization_tab: 
     visualisation.display()
     
-with interpretation_tab: 
-    interpretation.display()
+
