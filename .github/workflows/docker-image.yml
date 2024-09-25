@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  publish_images:
+  publish_image:
     runs-on: ubuntu-latest
     steps:
       - name: checkout
