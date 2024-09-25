@@ -60,17 +60,9 @@ def create_pipeline(**kwargs) -> Pipeline:
                 outputs="memory_feature_duration_seconds",
             ),
             node(
-                nodes.attach_duration_log_sqrt_seconds,
-                inputs=[
-                    "memory_feature_duration_seconds",
-                    "params:audit_data",
-                ],
-                outputs="memory_feature_duration_log_sqrt_seconds",
-            ),
-            node(
                 nodes.attach_median_seconds,
                 inputs=[
-                    "memory_feature_duration_log_sqrt_seconds",
+                    "memory_feature_duration_seconds",
                     "params:audit_data",
                 ],
                 outputs="memory_feature_median_seconds",
@@ -92,15 +84,8 @@ def create_pipeline(**kwargs) -> Pipeline:
                 outputs="memory_feature_event_time_IQR",
             ),
             node(
-                nodes.attach_mean_sqrt_log_seconds,
-                inputs=[
-                    "memory_feature_event_time_IQR", 
-                    "params:audit_data"],
-                outputs="memory_feature_mean_sqrt_log_seconds",
-            ),
-            node(
                 nodes.attach_node_base_path,
-                inputs=["memory_feature_mean_sqrt_log_seconds",
+                inputs=["memory_feature_event_time_IQR",
                         "params:audit_data"],
                 outputs="memory_feature_node_base_path",
             ),

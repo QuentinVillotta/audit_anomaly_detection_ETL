@@ -5,14 +5,12 @@ generated using Kedro 0.19.2
 import logging
 import os
 from typing import Dict
-from urllib.parse import urlparse
-
 import numpy as np
 import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-# Step 0
+# Node 1
 def format_columns(data: pd.DataFrame | dict,
                    config: dict,
                    drop_other_vars: bool
@@ -48,9 +46,7 @@ def format_columns(data: pd.DataFrame | dict,
         data = data.loc[:, selected_vars]
     return data
 
-# Step 1 - 2 (deleted)
-
-# Step 3
+# Node 2
 def attach_start_date(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
     """
     Returns a DataFrame with a new column 'start_date' which represents the date of the start time of the survey.
@@ -68,9 +64,7 @@ def attach_start_date(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
     df[parameters["start_time"]] = df[parameters["start"]].dt.time
     return df
 
-# Step 4 - 6 (delted)
-
-# Step 7
+# Node 3
 def attach_survey_count(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
     """Adds a new column 'num_surveys' to the input DataFrame representing the number of surveys conducted by each enumerator.
 
@@ -86,7 +80,7 @@ def attach_survey_count(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
     ].transform("count")
     return df
 
-# Step 8
+# Node 4
 def attach_duration_seconds(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
     """
     Attaches duration in seconds to the input dataframe.
@@ -106,27 +100,7 @@ def attach_duration_seconds(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
     df[parameters["seconds"]] = round((df["date_end"] - df["date_start"]).dt.total_seconds())
     return df
 
-# Step 9
-def attach_duration_log_sqrt_seconds(
-    df: pd.DataFrame, parameters: Dict
-) -> pd.DataFrame:
-    """
-    Attaches the square root of the natural logarithm of the duration in seconds to the input dataframe.
-
-    Args:
-        df: Pandas DataFrame representing the input data.
-        parameters: Dict containing the following keys:
-            - seconds: str representing the name of the column containing the duration in seconds.
-
-    Returns:
-        Pandas DataFrame with the square root of the natural logarithm of the duration in seconds attached.
-    """
-    df[parameters["sqrt_log_seconds"]] = np.sqrt(
-        np.log(np.maximum(1, df[parameters["seconds"]]))
-    )
-    return df
-
- # Step 10
+# Node 5
 def attach_median_seconds(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
     """Adds a new column 'median_seconds' to the input DataFrame representing the median of seconds for each node.
 
@@ -141,7 +115,7 @@ def attach_median_seconds(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
            parameters["seconds"]].transform("median")
     return df
 
-# Step 10 bis - 
+# Node 6
 def attach_event_time_std(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
 
     df["event_time_std"] = df.groupby([parameters["event"], parameters["full_path"]], dropna=False)[
@@ -159,7 +133,7 @@ def attach_event_time_std(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
  
     return df
 
-# Step 10 bis bis - 
+# Node 7
 def attach_event_time_IQR(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
     # Calculer la médiane, le premier quartile (Q1) et le troisième quartile (Q3) pour chaque événement
     df['q1_seconds'] = df.groupby([parameters["event"], parameters["full_path"]], dropna=False)['seconds'].transform(lambda x: x.quantile(0.25))
@@ -173,24 +147,7 @@ def attach_event_time_IQR(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
     df[parameters['event_time_outside_1_5_IQR']] = ~df['seconds'].between(df['IQR_lower_bound'], df['IQR_upper_bound'])
     return df
 
-
-# Step 11
-def attach_mean_sqrt_log_seconds(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
-    """
-    Adds a new column 'mean_sqrt_log_seconds' to the input DataFrame representing the mean of the square root of the logarithm of seconds for each node.
-
-    Args:
-        df: Pandas DataFrame representing the input data.
-        parameters: Dictionary containing parameters for the function.
-
-    Returns:
-        pd.DataFrame: The input DataFrame with a new column "mean_sqrt_log_seconds" added.
-    """
-    df.loc[:, parameters["mean_sqrt_log_seconds"]] = df.groupby([parameters["event"], parameters["full_path"]], dropna=False)[
-            parameters["sqrt_log_seconds"]].transform("mean")
-    return df
-
-# Step 12
+# Node 8
 def attach_node_base_path(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
     """Adds a new column to the input DataFrame representing the base path of the node. The new column is named `node_base_path`.
 
@@ -206,9 +163,7 @@ def attach_node_base_path(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
     )
     return df
 
-# Step 13
-
-# Step 14
+# Node 9
 def attach_relative_pace(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
     """Add a new column to the input DataFrame representing the relative pace of the audit. The new column is named
     `relative_pace` and is calculated as the median response time divided by the response time of the audit.
@@ -224,29 +179,3 @@ def attach_relative_pace(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
         df[parameters["median_seconds"]] / df[parameters["seconds"]]
     )
     return df
-
-# Step 15 - 29 (delted)
-
-# Step 31
-def group_dataframe_by_audit_id(df: pd.DataFrame, parameters: Dict) -> pd.DataFrame:
-    return df.groupby(parameters["audit_id"]).first().reset_index()
-
-# Step 32
-def remove_nans(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Removes rows containing NaN values from the input dataframe.
-
-    Args:
-        df: Pandas DataFrame representing the input data.
-
-    Returns:
-        Pandas DataFrame with NaN values removed.
-    """
-    print("BEFORE REMOVING NAN")
-    print(len(df))
-    logger.info(f"shape prior to removing NaN: {df.shape}")
-    logger.info(f"{df.isna().sum()} NaN values present")
-    df_clean = df.dropna().reset_index(drop=True)
-    print("AFTER REMOVING NAN")
-    print(len(df_clean))
-    return df_clean

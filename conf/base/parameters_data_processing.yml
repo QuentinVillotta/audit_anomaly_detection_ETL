@@ -26,20 +26,17 @@ raw_data:
   audit_id: "audit_id"
   num_surveys: "num_surveys"
 
-
 audit_data:
-  seconds: "seconds"
-  sqrt_log_seconds: "sqrt_log_seconds"
-  event: "event"
-  full_path: "node"
-  end: "end"
-  start: "start"
-  median_seconds: "median_seconds"
-  mean_sqrt_log_seconds: "mean_sqrt_log_seconds"
-  node_base_path: "node_base_path"
-  relative_pace: "relative_pace"
   # sigma delta event
   event_time_std_delta: 2
   event_time_std_factor: "event_time_std_factor"
   event_time_outside_1_5_IQR: "event_time_outside_1_5_IQR"
   event_time_outside_delta_std: "event_time_outside_delta_std"
+  seconds: "seconds"
+  event: "event"
+  full_path: "node"
+  end: "end"
+  start: "start"
+  median_seconds: "median_seconds"
+  node_base_path: "node_base_path"
+  relative_pace: "relative_pace"

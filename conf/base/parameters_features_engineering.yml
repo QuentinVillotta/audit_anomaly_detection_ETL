@@ -23,7 +23,6 @@ FE_audit_data:
   nb_event_time_outside_1_5_IQR: "nb_event_time_outside_1_5_IQR"
   event_time_outside_delta_std: "event_time_outside_delta_std"
   nb_event_time_outside_delta_std: "nb_event_time_outside_delta_std"
-  mean_sqrt_log_seconds: "mean_sqrt_log_seconds"
   notin_daytime: "notin_daytime"
   median_seconds: "median_seconds"
   event_time_difference_from_median: "event_time_difference_from_median"
