@@ -2,12 +2,14 @@ import streamlit as st
 from app_utils import data_io
 import os
 import yaml
-
+import pickle
 
 # Parameters
 # Load the initial YAML file from the specified path
 INPUT_FILE_PATH = os.path.join("conf", "base", "globals_template.yml")
 OUTPUT_FILE_PATH = os.path.join("conf", "base", "globals.yml")
+MODEL_OUTPUT_PATH = os.path.join("data", "05_model_output", "output_model.pkl")
+PREDICTION_PATH = os.path.join("data", "05_model_output", "raw_features_predictions_and_scores.xlsx")
 
 
 # Mandatory fields
@@ -65,5 +67,14 @@ def display():
 
                 # Run kedro and display logs
                 data_io.run_kedro()
+
+                # Load Pickle file
+                if os.path.exists(MODEL_OUTPUT_PATH):
+                    with open(MODEL_OUTPUT_PATH, 'rb') as pickle_file:
+                        ETL_output = pickle.load(pickle_file) 
+                    st.session_state.ETL_output = ETL_output
+                else:
+                    st.error("Please re run the pipeline")
+
             else:
                 st.error("Please fill out all mandatory fields.")
