@@ -21,15 +21,15 @@ PREDICTION_PATH = os.path.join("data", "05_model_output", "raw_features_predicti
 if 'click_count' not in st.session_state:
     st.session_state.click_count = 0
 if 'ETL_output' not in st.session_state:
-    if os.path.exists(MODEL_OUTPUT_PATH):
-                    with open(MODEL_OUTPUT_PATH, 'rb') as pickle_file:
-                        ETL_output = pickle.load(pickle_file)
-    st.session_state.ETL_output = ETL_output
+    # if os.path.exists(MODEL_OUTPUT_PATH):
+    #                 with open(MODEL_OUTPUT_PATH, 'rb') as pickle_file:
+    #                     ETL_output = pickle.load(pickle_file)
+    st.session_state.ETL_output = {}
 
 
-# if st.session_state.click_count == 0:  
-#     data_io.delete_file(MODEL_OUTPUT_PATH)
-#     data_io.delete_file(PREDICTION_PATH)
+if st.session_state.click_count == 0:  
+    data_io.delete_file(MODEL_OUTPUT_PATH)
+    data_io.delete_file(PREDICTION_PATH)
 
 # Menu/Tabs app
 list_tab = ["Welcome", "Summary", "Interpretation", "Visualization"]
