@@ -21,7 +21,7 @@ def get_predict_and_score(pipelines, X: pd.DataFrame, parameters: Dict)-> pd.Dat
             y_pred = pipeline.predict(X_features)
             y_score = pipeline.decision_function(X_features)
             if model_name in  parameters["models_to_invert_score"] :
-                # Convertir les prédictions de -1/1 à 1/0
+                # Convert predictions from -1/1 to 1/0
                 y_pred = (y_pred == -1).astype(int)
             predictions[model_name] = y_pred
             scores[model_name] = y_score

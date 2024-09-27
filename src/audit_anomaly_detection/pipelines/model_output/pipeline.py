@@ -11,7 +11,7 @@ def create_pipeline(**kwargs) -> Pipeline:
         [
         node(
             nodes.get_predict_and_score,
-            inputs=["04_trained_models", "03_features_scaled", "params:model_output"],
+            inputs=["04_trained_models", "03_features", "params:model_output"],
             outputs=["memory_model_output_predictions", "memory_model_output_scores"],
             ),
         node(
@@ -36,7 +36,7 @@ def create_pipeline(**kwargs) -> Pipeline:
             ),
         node(
             nodes.SHAP_interpretation,
-            inputs=["04_trained_models", "03_features_scaled", "params:model_output"],
+            inputs=["04_trained_models", "03_features", "params:model_output"],
             outputs="memory_SHAP_interpretation"
             ),
         node(
