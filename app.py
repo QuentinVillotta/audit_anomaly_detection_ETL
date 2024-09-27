@@ -38,13 +38,14 @@ welcome_tab, summary_tab, interpretation_tab, visualization_tab= st.tabs(list_ta
 with welcome_tab:
     welcome.display()
 
-with summary_tab: 
-    summary.display()
+if st.session_state.ETL_output:
+    with summary_tab: 
+        summary.display()
 
-with interpretation_tab: 
-    interpretation.display()
+    with interpretation_tab: 
+        interpretation.display()
 
-with visualization_tab: 
-    visualisation.display()
+    with visualization_tab: 
+        visualisation.display()
     
 
