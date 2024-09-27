@@ -4,8 +4,7 @@ on:
   push:
     branches:
       - main
-      - visualisation_features
-
+      
 jobs:
   publish_image:
     runs-on: ubuntu-latest
