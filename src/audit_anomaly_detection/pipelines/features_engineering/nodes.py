@@ -557,15 +557,3 @@ def remove_nans(df: pd.DataFrame) -> pd.DataFrame:
     logger.info(f"{df.isna().sum()} NaN values present")
     df_clean = df.dropna().reset_index(drop=True)
     return df_clean
-
-# Node 17
-def standard_scaling_input_features(X: pd.DataFrame,  parameters: Dict) -> pd.DataFrame:
-    # Remove audit_id column
-    X_features = X.drop([parameters['audit_id']], axis=1)
-    # Features Standardisation
-    scaler = StandardScaler()
-    X_features_scaled = scaler.fit_transform(X_features)
-    # Concat audit_id col
-    X_features_scaled = pd.DataFrame(X_features_scaled, columns=X_features.columns)
-    X_features_scaled.insert(0, parameters['audit_id'],  X[parameters['audit_id']])
-    return X_features_scaled

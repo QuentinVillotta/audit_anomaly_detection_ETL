@@ -49,5 +49,4 @@ def create_pipeline():
                 ('scaler', StandardScaler()),
                 ('model', model)
             ])
-
     return pipelines

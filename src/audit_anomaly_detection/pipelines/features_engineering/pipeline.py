@@ -122,11 +122,6 @@ def create_pipeline(**kwargs) -> Pipeline:
                 nodes.remove_nans,
                 inputs="memory_selected_features",
                 outputs="03_features",
-            ),
-            node(
-                nodes.standard_scaling_input_features,
-                inputs=["03_features", "params:FE_audit_data"],
-                outputs="03_features_scaled"
             )
         ]
     )

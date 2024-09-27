@@ -108,19 +108,19 @@
     kedro-viz:
       layer: 05_model_output
 
-05_raw_data_predict_and_score:
-  type: pandas.ExcelDataset
-  filepath: data/05_model_output/raw_data_predictions_and_scores.xlsx
-  metadata:
-    kedro-viz:
-      layer: 05_model_output
+# 05_raw_data_predict_and_score:
+#   type: pandas.ExcelDataset
+#   filepath: data/05_model_output/raw_data_predictions_and_scores.xlsx
+#   metadata:
+#     kedro-viz:
+#       layer: 05_model_output
 
-05_SHAP_interpretation:
-  type: pickle.PickleDataset
-  filepath: data/05_model_output/SHAP_interpretation.pkl
-  metadata:
-    kedro-viz:
-      layer: 05_model_output
+# 05_SHAP_interpretation:
+#   type: pickle.PickleDataset
+#   filepath: data/05_model_output/SHAP_interpretation.pkl
+#   metadata:
+#     kedro-viz:
+#       layer: 05_model_output
 
 # Debug --------
 # 999_DEBUG:
