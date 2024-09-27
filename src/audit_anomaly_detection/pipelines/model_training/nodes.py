@@ -11,7 +11,7 @@ from sklearn.ensemble import IsolationForest
 from sklearn.svm import OneClassSVM
 from sklearn.neighbors import LocalOutlierFactor
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import StandardScaler
 
 logger = logging.getLogger(__name__)
 
@@ -40,8 +40,14 @@ def create_pipeline():
     # Prepare the pipelines for each model
     pipelines = {}
     for model_name, model in base_models.items():
-        pipelines[model_name] = Pipeline([
-            # ('scaler', StandardScaler()),
-            ('model', model)
-        ])
+        if model_name == 'IsolationForest':
+            pipelines[model_name] = Pipeline([
+                ('model', model)
+            ])
+        else:
+            pipelines[model_name] = Pipeline([
+                ('scaler', StandardScaler()),
+                ('model', model)
+            ])
+
     return pipelines

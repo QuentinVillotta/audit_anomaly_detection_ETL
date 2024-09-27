@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import shap
 import streamlit.components.v1 as components
 
-
 def classify_variable_types(df, threshold=20):
     """
     Classify the variables of a DataFrame as continuous or discrete.
@@ -96,6 +95,8 @@ def displot(df, X, Y, hue) -> None:
     return fig
 
 # SHAP Plot
+# Custom colormap reversing blue and red
+
 def st_shap(plot, height=None):
      shap_html = f"<head>{shap.getjs()}</head><body>{plot.html()}</body>"
      components.html(shap_html, height=height)

@@ -76,12 +76,12 @@
     kedro-viz:
       layer: 03_features
 
-03_features_scaled:
-  type: pandas.ExcelDataset
-  filepath: data/03_features/${globals:project_short}/features_scaled.xlsx
-  metadata:
-    kedro-viz:
-      layer: 03_features
+# 03_features_scaled:
+#   type: pandas.ExcelDataset
+#   filepath: data/03_features/${globals:project_short}/features_scaled.xlsx
+#   metadata:
+#     kedro-viz:
+#       layer: 03_features
 
 # 04 Models
 

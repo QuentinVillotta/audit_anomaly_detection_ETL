@@ -1,12 +1,11 @@
 import pandas as pd
 import yaml
 import os
-import subprocess
 import io
 import streamlit as st
 from kedro.framework.session import KedroSession
 from kedro.framework.startup import bootstrap_project
-
+from app_utils import kobo_tools
 
 # Welcome Page - Configuration Form 
 def delete_file(file_path):
@@ -50,11 +49,23 @@ def render_form(config_dict, parent_key='', inside_expander=False):
                     updated_dict[key] = st.text_input("Enter custom kobo_server:", key=f"custom_{full_key}")
 
             elif key == "kobo_credentials":
-                uploaded_file = st.file_uploader(f"Upload {key} YAML", type="yml", key=full_key)
-                if uploaded_file is not None:
-                    yaml_data = yaml.safe_load(uploaded_file)
-                    updated_dict[key] = yaml_data.get("kobo_credentials", "")
-
+                uploaded_file = st.file_uploader(f"Upload Kobo credentials YAML file", type=["yml", "yaml"], key=full_key)
+                if uploaded_file:
+                    try:
+                        # Load the YAML data from the uploaded file
+                        yaml_data = yaml.safe_load(uploaded_file)
+                        # Check Kobo token format
+                        valid, message = kobo_tools.check_kobo_credentials_format(yaml_data)
+                        if valid:
+                            updated_dict[key] = yaml_data.get("kobo_credentials", "")
+                        else:
+                            # st.error(message)
+                            st.image("www/wrong_format_credentials.gif") 
+                    except yaml.YAMLError as e:
+                        st.error(f"YAML parsing error: {e}")
+                    except Exception as e:
+                        st.error(f"Unexpected error: {e}")
+                    
             elif value is None or isinstance(value, str):
                 updated_dict[key] = st.text_input(f"{key}", value="" if value is None else value, key=full_key)
             
@@ -70,45 +81,9 @@ def render_form(config_dict, parent_key='', inside_expander=False):
     return updated_dict
 
 ## Kedro ETL manager
-# def run_kedro():
-#     with st.spinner("Running the pipeline, this may take a few minutes. Please wait."):
-#         process = subprocess.Popen(['kedro', 'run'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-
-#         # Use a placeholder for logs
-#         log_placeholder = st.empty()
-
-#         # List to store the last few log lines
-#         log_lines = []
-#         # Dask Daskboard
-#         dashboard_link = "http://127.0.0.1:8787"
-#         st.components.v1.iframe(src=dashboard_link, height=600)
-#         # Read the logs in real-time
-#         while True:
-#             output = process.stdout.readline()
-#             if output == '' and process.poll() is not None:
-#                 break
-#             if output:
-#                 # Add the line to the logs
-#                 log_lines.append(output.strip())
-
-#                 # Keep only the last 20 lines
-#                 if len(log_lines) > 12:
-#                     log_lines.pop(0)
-
-#                 # Display the last 5 lines in the placeholder
-#                 log_placeholder.text("\n".join(log_lines))
-#         # Check for stderr output (errors)
-#         stderr_output = process.stderr.read()
-#         if stderr_output:
-#             log_placeholder.error(stderr_output.strip())
-#             st.error("An error occurred while running the pipeline. Please check the logs.")
-#         else:
-#             st.success("Pipeline run completed successfully!")
-
 def run_kedro_pipeline():
 
     bootstrap_project(os.getcwd())
-
     # Initialize Kedro session (assuming you're in a Kedro project directory)
     with KedroSession.create() as session:
         placeholder = st.empty()
@@ -117,21 +92,8 @@ def run_kedro_pipeline():
             st.info("Running the full pipeline...")
             session.run(pipeline_name="__default__")  # Or specify your custom pipeline name
 
-        # #Access the Kedro context and catalog after the pipeline has run
-        # context = session.load_context()
-        # catalog = context.catalog
-        
-        # # Retrieve objects from the catalog
-        # output_data = catalog.load("01_raw_data")  # Replace with the name of your dataset
-
-        # output_data = context.run(pipeline_name='data_download')
-        # raw_data = output_data['01_raw_data']
-        #Display the results in Streamlit
-            
-        # st.dataframe(output_data)
         placeholder.empty()
         st.success("Pipeline has finished")
-
 
 
 # Function to save plots as PNG and return bytes
