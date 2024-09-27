@@ -2,13 +2,6 @@
 
 This application detects anomalies in survey data based on Kobo audit files. Using a machine learning approach, it automatically identifies potentially fraudulent surveys by analyzing abnormal patterns. The project is structured as a Kedro pipeline that downloads audit files from the Kobo API, processes the data, and predicts anomalies. The results are accessible through a Streamlit web application, allowing users to configure and explore them interactively.
 
-## Features
-
-- Automatically download Kobo audit files via the API.
-- Analyze data and detect anomalies using machine learning.
-- User-friendly web interface for configuration and results exploration.
-- Deployed via Docker for easy installation and use.
-
 ## Installation Guide
 
 ### Prerequisites
