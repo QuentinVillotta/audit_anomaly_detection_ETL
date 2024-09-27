@@ -34,9 +34,11 @@ def create_pipeline(**kwargs) -> Pipeline:
                     "params:audit_id",
                     "params:kobo_credentials",
                     "params:dask_nb_worker",
-                    "params:dask_nb_thread_per_worker"
+                    "params:dask_nb_thread_per_worker",
+                    "params:dask_dashboard_url"
                 ],
-                outputs="01_raw_audit"
+                outputs="01_raw_audit",
+                name="extract_audit_files"
             ),
             node(
                 nodes.extract_questionnaire_from_api,

@@ -16,8 +16,6 @@ def display():
           # 1. General indicator - % of detected anomalies
                total_surveys = len(df)
                total_anomalies = df['anomaly_prediction'].sum()
-               anomalies_percentage = (total_anomalies / total_surveys) * 100
-
                # Pie chart of detected anomalies
                pie_data = pd.DataFrame({
                "Type": ["Anomalies", "Non-Anomalies"],
@@ -30,10 +28,14 @@ def display():
                # summary_stats = df.describe()
                st.dataframe(df)
 
-
-
      with sub_tab2:
-          fig, ax = plt.subplots()
-          sns.countplot(data=df, x="enum_id", hue="anomaly_prediction", ax=ax)
-          ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
-          st.pyplot(fig)
+          # fig, ax = plt.subplots()
+          # import pandas as pd
+          # import numpy as np
+          # chart_data = pd.DataFrame(np.random.randn(20, 3), columns=["a", "b", "c"])
+          survey_count = df.groupby(['enum_id', 'anomaly_prediction']).size().unstack(fill_value=0)
+          survey_count.columns = ['No Anomaly', 'Anomaly']
+          st.bar_chart(survey_count)
+          # sns.countplot(data=df, x="enum_id", hue="anomaly_prediction", ax=ax)
+          # ax.set_xticklabels(ax.get_xticklabels(), rotation=90)
+          # st.pyplot(fig)

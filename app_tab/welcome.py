@@ -66,7 +66,8 @@ def display():
                     yaml.dump(updated_config, file, default_flow_style=False)
 
                 # Run kedro and display logs
-                data_io.run_kedro()
+                # data_io.run_kedro()
+                data_io.run_kedro_pipeline()
 
                 # Load Pickle file
                 if os.path.exists(MODEL_OUTPUT_PATH):
