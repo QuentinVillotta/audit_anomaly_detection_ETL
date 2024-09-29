@@ -7,6 +7,9 @@ from kedro.framework.session import KedroSession
 from kedro.framework.startup import bootstrap_project
 from app_utils import kobo_tools
 
+def format_string(input_string):
+    return input_string.replace('_', ' ').title()
+
 # Welcome Page - Configuration Form 
 def delete_file(file_path):
     try:
@@ -15,85 +18,88 @@ def delete_file(file_path):
     except Exception as e:
         st.write(f"Error deleting file {file_path}: {e}")
 
-## Function to display and modify a dictionary in a form
-def render_form(config_dict, parent_key='', inside_expander=False):
+def render_form(config):
     updated_dict = {}
-    for key, value in config_dict.items():
-        full_key = f"{parent_key}.{key}" if parent_key else key  # Unique key for each field
-        
-        if key in ['url', 'url_questionnaire']:  # Skip these parameters
-            continue
-        
-        if key in ['raw_data_columns', 'audit_columns', 'questionnaire_columns'] and not inside_expander:
-            with st.expander(f"{key}:"):
-                updated_dict[key] = render_form(value, full_key, inside_expander=True)
-        else:
-            if isinstance(value, dict) and 'mapping' in value and 'dtype' in value:
-                st.write(f"{key}")
-                
-                # Input field for 'mapping'
-                updated_dict[key] = {}
-                updated_dict[key]['mapping'] = st.text_input(f"{key} - Variable Name", value=value.get('mapping', ''))
-                
-                # Selectbox for 'dtype'
-                updated_dict[key]['dtype'] = st.selectbox(f"{key} - Variable Type", ['str', 'float'], index=0 if value.get('dtype') == 'str' else 1)
-
-            elif key == "kobo_server":
-                updated_dict[key] = st.selectbox(
-                    f"{key}", 
-                    ['kobo.impact-initiatives.org', 'eu.kobotoolbox.org', 'Other'], 
-                    index=0,
-                    key=full_key
-                )
-                if updated_dict[key] == 'Other':
-                    updated_dict[key] = st.text_input("Enter custom kobo_server:", key=f"custom_{full_key}")
-
-            elif key == "kobo_credentials":
-                uploaded_file = st.file_uploader(f"Upload Kobo credentials YAML file", type=["yml", "yaml"], key=full_key)
-                if uploaded_file:
-                    try:
-                        # Load the YAML data from the uploaded file
-                        yaml_data = yaml.safe_load(uploaded_file)
-                        # Check Kobo token format
-                        valid, message = kobo_tools.check_kobo_credentials_format(yaml_data)
-                        if valid:
-                            updated_dict[key] = yaml_data.get("kobo_credentials", "")
-                        else:
-                            # st.error(message)
-                            st.image("www/wrong_format_credentials.gif") 
-                    except yaml.YAMLError as e:
-                        st.error(f"YAML parsing error: {e}")
-                    except Exception as e:
-                        st.error(f"Unexpected error: {e}")
-                    
-            elif value is None or isinstance(value, str):
-                updated_dict[key] = st.text_input(f"{key}", value="" if value is None else value, key=full_key)
-            
-            elif isinstance(value, float):
-                updated_dict[key] = st.number_input(f"{key}", value=value, key=full_key)
-
-            elif isinstance(value, int):
-                updated_dict[key] = st.number_input(f"{key}", value=value, step=1, key=full_key)
-
+    # Asset UID Section
+    updated_dict['asset_uid'] = st.text_input("**Enter KoBo Project ID (asset_uid)**", value='a7Ttgjamsjep2KJxXZ4vbt')
+    
+    # Kobo Server Section
+    kobo_servers = ['kobo.impact-initiatives.org', 'eu.kobotoolbox.org', 'Other']
+    selected_server = st.selectbox("**Select KoBo server**", kobo_servers, index=0)
+    if selected_server == 'Other':
+        updated_dict['kobo_server'] = st.text_input("Enter custom KoBo server host:", value="")
+    else:
+        updated_dict['kobo_server'] = selected_server
+    
+    uploaded_file = st.file_uploader("**Upload Kobo credentials (YAML file)**", type=["yml", "yaml"])
+    if uploaded_file:
+        try:
+            # Load the YAML data from the uploaded file
+            yaml_data = yaml.safe_load(uploaded_file)
+            # Check Kobo token format
+            valid, message = kobo_tools.check_kobo_credentials_format(yaml_data)
+            if valid:
+                updated_dict['kobo_credentials'] = yaml_data.get("kobo_credentials", "")
             else:
-                updated_dict[key] = st.text_input(f"{key}", value=str(value), key=full_key)
+                st.image("www/wrong_format_credentials.gif") 
+                st.error(message)
+        except yaml.YAMLError as e:
+            st.error(f"YAML parsing error: {e}")
+        except Exception as e:
+            st.error(f"Unexpected error: {e}")
 
+
+    # Raw Data Columns Section (in an expander with name and type in two columns)
+    name_mapping = {
+        "enum_id": "enumerator ID",
+        "audit_id": "survey ID",
+        "start_time": "start"
+    }
+    # Expander pour les colonnes des raw data
+  
+    for key, value in config.items():
+        updated_dict[key] = {}
+        # Définir le nom de l'expander et son état (ouvert ou fermé par défaut)
+        expander_name = f"**{format_string(key)}**"
+        expanded_flag = (key == "raw_data_columns")
+        # Expander pour chaque section (Raw Data ou autre)
+        with st.expander(expander_name, expanded=expanded_flag):
+            # Parcourir chaque colonne et ses propriétés
+            for column, properties in value.items():
+                display_name = name_mapping.get(column, column)  # Utiliser le nom personnalisé si disponible
+                updated_dict[key][column] = {}
+                # Deux colonnes pour organiser le formulaire (nom et type)
+                col1, col2 = st.columns(2)
+                with col1:
+                    # Champ pour le mapping (nom de la variable dans le formulaire Kobo)
+                     updated_dict[key][column]['mapping'] = st.text_input(
+                        f"**{display_name}** : Variable name in Kobo form", 
+                        value=properties.get('mapping', ''),
+                        key=f"mapping_{column}"
+                    )
+                with col2:
+                    # Sélectionner le type de variable (dtype)
+                     updated_dict[key][column]['dtype'] = st.selectbox(
+                        f"Type", ['str', 'float'], 
+                        index=0 if properties.get('dtype') in ['str', None] else 1,
+                        key=f"dtype_{column}"
+                    )
     return updated_dict
 
-## Kedro ETL manager
+# ## Kedro ETL manager
 def run_kedro_pipeline():
 
     bootstrap_project(os.getcwd())
     # Initialize Kedro session (assuming you're in a Kedro project directory)
-    with KedroSession.create() as session:
-        placeholder = st.empty()
-        with placeholder.container():
-        # Run the pipeline (use the name of the pipeline you want to execute, or default)
-            st.info("Running the full pipeline...")
-            session.run(pipeline_name="__default__")  # Or specify your custom pipeline name
-
-        placeholder.empty()
-        st.success("Pipeline has finished")
+    placeholder = st.empty()
+    with placeholder.container():
+        with KedroSession.create() as session:
+            # Run the pipeline (use the name of the pipeline you want to execute, or default)
+            st.info("Running the pipeline, please wait ...")
+            session.run(pipeline_name="__default__")
+    placeholder.empty()
+    st.success("Pipeline has finished")
+        
 
 
 # Function to save plots as PNG and return bytes

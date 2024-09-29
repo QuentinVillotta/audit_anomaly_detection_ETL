@@ -12,7 +12,7 @@
 
 01_raw_data:
   type: json.JSONDataset
-  filepath: data/01_raw/${globals:project_short}/raw_data.json
+  filepath: data/01_raw/raw_data.json
   metadata:
     kedro-viz:
       layer: 01_raw
@@ -20,7 +20,7 @@
 # Audit data
 01_raw_audit:
   type: pandas.CSVDataset
-  filepath: data/01_raw/${globals:project_short}/audit_data.csv
+  filepath: data/01_raw/audit_data.csv
   metadata:
     kedro-viz:
       layer: 01_raw
@@ -39,7 +39,7 @@
 
 01_questionnaire:
   type: pandas.ExcelDataset
-  filepath: data/01_raw/${globals:project_short}/questionnaire.xlsx
+  filepath: data/01_raw/questionnaire.xlsx
   metadata:
     kedro-viz:
       layer: 01_raw
@@ -48,21 +48,21 @@
 
 02_intermediate_audit:
   type: pandas.CSVDataset
-  filepath: data/02_intermediate/${globals:project_short}/audit.csv
+  filepath: data/02_intermediate/audit.csv
   metadata:
     kedro-viz:
       layer: 02_intermediate
 
 02_intermediate_raw_data:
   type: pandas.CSVDataset
-  filepath: data/02_intermediate/${globals:project_short}/raw_data.csv
+  filepath: data/02_intermediate/raw_data.csv
   metadata:
     kedro-viz:
       layer: 02_intermediate
 
 02_intermediate_questionnaire:
   type: pandas.ExcelDataset
-  filepath: data/02_intermediate/${globals:project_short}/questionnaire.xlsx
+  filepath: data/02_intermediate/questionnaire.xlsx
   metadata:
     kedro-viz:
       layer: 02_intermediate
@@ -71,14 +71,14 @@
 
 03_features:
   type: pandas.ExcelDataset
-  filepath: data/03_features/${globals:project_short}/features.xlsx
+  filepath: data/03_features/features.xlsx
   metadata:
     kedro-viz:
       layer: 03_features
 
 # 03_features_scaled:
 #   type: pandas.ExcelDataset
-#   filepath: data/03_features/${globals:project_short}/features_scaled.xlsx
+#   filepath: data/03_features/features_scaled.xlsx
 #   metadata:
 #     kedro-viz:
 #       layer: 03_features

@@ -9,6 +9,7 @@ import time
 import os
 import dask
 from dask.distributed import Client, LocalCluster
+from dask.diagnostics import ProgressBar
 import streamlit.components.v1 as components
 import streamlit as st
 
@@ -106,12 +107,11 @@ def extract_audit_files(
     dask_nb_thread_per_worker: int = 1,
     dask_dashboard_url: str = "http://127.0.0.1:8787"
 )-> None:
-    # iframe_placeholder = st.empty()
-    placeholder = st.empty()
     cluster = LocalCluster(n_workers = dask_nb_worker, threads_per_worker = dask_nb_thread_per_worker)
+    # Display Dask Dashboard in the app
+    st.info("Downloading audit files ...")
+    components.iframe(src=dask_dashboard_url, height=500)
     with Client(cluster, asynchronous = True) as client:
-        with placeholder.container():
-            components.iframe(src=dask_dashboard_url, height=500)
         # Dask Parallelisation
         start_time = time.time()
         delayed_audit_download = [dask.delayed(_download_audit_files)(url, id_audit, kobo_credentials) for url, id_audit in zip(df['audit_url'],df[audit_id])]
@@ -126,5 +126,4 @@ def extract_audit_files(
         if audit_df.shape[1] != max_columns:
             raise ValueError(f"Column count mismatch: concatenated DataFrame has {audit_df.shape[1]} columns, expected {max_columns}.")
     cluster.close()
-    placeholder.empty()
     return audit_df

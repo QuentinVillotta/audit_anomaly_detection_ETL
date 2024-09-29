@@ -1,14 +1,7 @@
-asset_uid: a7Ttgjamsjep2KJxXZ4vbt
-kobo_server: 
-
-kobo_credentials: 
-
-project_short: HSOS_RD11
-
 raw_data_columns:
   enum_id: 
     mapping: G_basic_information/enumerator_id
-    dtype: str      
+    dtype: str       
   audit_id: 
     mapping: _uuid
     dtype: str
@@ -60,6 +53,3 @@ questionnaire_columns:
   relevant: 
     mapping: relevant
     dtype: str
-
-url: https://${kobo_server}/api/v2/assets/${asset_uid}/data/?format=json
-url_questionnaire: https://${kobo_server}/api/v2/assets/${asset_uid}/?format=json
