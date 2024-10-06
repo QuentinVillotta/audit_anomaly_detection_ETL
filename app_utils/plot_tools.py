@@ -68,6 +68,21 @@ def load_variable_attribute(var_name, var_attribute):
         
     return mapping
 
+# Summary tab
+
+def pie_chart_pct_anomalies(df):
+    # 1. General indicator - % of detected anomalies
+    total_surveys = len(df)
+    total_anomalies = df['anomaly_prediction'].sum()
+    # Pie chart of detected anomalies
+    pie_data = pd.DataFrame({
+    "Type": ["Anomalies", "Non-Anomalies"],
+    "Count": [total_anomalies, total_surveys - total_anomalies]
+    })
+    fig_pie = px.pie(pie_data, values='Count', names='Type', title="Percentage of Detected Anomalies")
+    # Display the pie chart
+    st.plotly_chart(fig_pie, use_container_width=True)
+
 # Univariate Analysis
 @st.fragment
 def univariate_plotting(df, X, hue, variable_types, x_label=None) -> None:

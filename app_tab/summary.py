@@ -1,8 +1,6 @@
 import streamlit as st
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-import plotly.express as px
+from app_utils import plot_tools as pt
+
 
 # To order by nb d'annomaly
 
@@ -13,20 +11,10 @@ def display():
      with sub_tab1:
           col1, col2 = st.columns([2, 4])
           with col1:
-          # 1. General indicator - % of detected anomalies
-               total_surveys = len(df)
-               total_anomalies = df['anomaly_prediction'].sum()
-               # Pie chart of detected anomalies
-               pie_data = pd.DataFrame({
-               "Type": ["Anomalies", "Non-Anomalies"],
-               "Count": [total_anomalies, total_surveys - total_anomalies]
-               })
-               fig_pie = px.pie(pie_data, values='Count', names='Type', title="Percentage of Detected Anomalies")
-               # Display the pie chart
-               st.plotly_chart(fig_pie)
+               pt.pie_chart_pct_anomalies(df)
           with col2:
                # summary_stats = df.describe()
-               st.dataframe(df)
+               st.dataframe(df.set_index('audit_id'), hide_index= False)
 
      with sub_tab2:
           # fig, ax = plt.subplots()
