@@ -13,11 +13,11 @@ def display():
     features_list = list(st.session_state.variable_mapping.keys())
     features_labels = list(st.session_state.variable_mapping.values())
 
-    sub_tab1, sub_tab2 = st.tabs(["Univariate", "Bivariate"])
+    sub_tab1, sub_tab2, sub_tab3 = st.tabs(["Univariate", "Bivariate", "Enum"])
     predic_data = st.session_state.ETL_output['features_prediction_score']
     variable_types = pt.classify_variable_types(predic_data, THRESHOLD_QUANTITATIVE_TYPE)
-    hue_var_list = ["", 'anomaly_prediction']
-    labels_hue = ["None", "Anomaly Prediction"]
+    hue_var_list = ["", 'anomaly_prediction', "enum_id"]
+    labels_hue = ["None", "Anomaly Prediction", "Enumerator ID"]
     hue_mapping = dict(zip(hue_var_list, labels_hue))
     reverse_hue_mapping = {v: k for k, v in hue_mapping.items()}
 
@@ -29,7 +29,7 @@ def display():
         col1, col2 = st.columns([1, 5])
         with col1:
             variable = st.selectbox("Choose a variable:", filtered_labels_list, index=None)
-            hue_univariate_label = st.selectbox("Choose a grouping variable:", labels_hue, key="HUE_univariate", index=0)
+            hue_univariate_label = st.selectbox("Choose a grouping variable:", labels_hue[:2], key="HUE_univariate", index=0)
             hue_univariate = reverse_hue_mapping[hue_univariate_label] 
             if hue_univariate == "":
                 hue_univariate = None
@@ -65,6 +65,19 @@ def display():
                     st.pyplot(catplot)
                 with displot_tab:
                     st.pyplot(distplot)
+    with sub_tab3:
+        col1, col2 = st.columns([1, 5])
+        with col1:
+            variable_enum = st.selectbox("Choose a variable:", filtered_labels_list, index=None, key="enum_variable")
+            hue_enum_label = st.selectbox("Choose a grouping variable:", labels_hue[2], key="HUE_enum", index=0)
+            hue_enum = reverse_hue_mapping[hue_enum_label] 
+            if hue_enum == "":
+                hue_enum = None
+        with col2:
+            if variable_enum:
+                variable_name_enum = filtered_features_list[filtered_labels_list.index(variable_enum)]
+                pt.univariate_plotting_interactive_enum(df=predic_data, X=variable_name_enum, hue=hue_enum, variable_types=variable_types, x_label=variable_enum)
+
 
 
 
