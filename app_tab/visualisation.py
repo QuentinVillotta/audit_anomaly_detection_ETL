@@ -36,7 +36,7 @@ def display():
         with col2:
             if variable:
                 variable_name = filtered_features_list[filtered_labels_list.index(variable)]
-                pt.univariate_plotting2(df=predic_data, X=variable_name, hue=hue_univariate, variable_types=variable_types, x_label=variable)
+                pt.univariate_plotting_interactive(df=predic_data, X=variable_name, hue=hue_univariate, variable_types=variable_types, x_label=variable)
                 fig = pt.univariate_plotting(df=predic_data, X=variable_name, hue=hue_univariate, variable_types=variable_types, x_label=variable)
                 st.pyplot(fig)
 
