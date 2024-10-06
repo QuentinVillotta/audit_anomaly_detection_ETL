@@ -38,7 +38,7 @@ def display():
             with col1:
                 #st.subheader("Anomaly prediction")
                 #st.write(predic_data.loc[predic_data[SURVEY_ID_VAR] == selected_survey, 'anomaly_prediction'])
-                pt.make_subheader("Anomaly Prediction: {}".format(predic_data.loc[predic_data[SURVEY_ID_VAR] == selected_survey, 'anomaly_prediction'].values[0]))
+                pt.make_subheader("Anomaly Prediction Rank: {}".format(predic_data.loc[predic_data[SURVEY_ID_VAR] == selected_survey, 'anomaly_prediction'].index[0]+1))
 
             with col2:
                 #st.subheader("Anomaly Score")
