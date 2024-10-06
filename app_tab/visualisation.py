@@ -76,7 +76,8 @@ def display():
         with col2:
             if variable_enum:
                 variable_name_enum = filtered_features_list[filtered_labels_list.index(variable_enum)]
-                pt.univariate_plotting_interactive_enum(df=predic_data, X=variable_name_enum, hue=hue_enum, variable_types=variable_types, x_label=variable_enum)
+                #pt.univariate_plotting_interactive_enum(df=predic_data, X=variable_name_enum, hue=hue_enum, variable_types=variable_types, x_label=variable_enum)
+                pt.univariate_plotting_interactive_enum_anomaly(df=predic_data, X=variable_name_enum, hue=hue_enum, variable_types=variable_types, x_label=variable_enum)
 
 
 
