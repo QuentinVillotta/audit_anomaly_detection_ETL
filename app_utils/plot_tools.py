@@ -16,6 +16,23 @@ def make_subheader(_str, font_style="monospace", font_size=18):
     subheader = f"<p style='font-family: {font_style}; color: white; font-size: {font_size}px;'>{_str}</p>"
     st.markdown(subheader, unsafe_allow_html=True)
     
+def define_binning(df, X, variable_types):
+    if variable_types[X] == 'continuous':
+        bin_size, bin_width = freedman_diaconis_rule(df[X])
+        bin_size = bin_width if bin_width > 0 else (df[X].max() - df[X].min()) / 20
+        bin_start = df[X].min()
+        bin_end = df[X].max()
+    else:
+        bin_size = 1  
+        bin_start = df[X].min() - 0.5
+        bin_end = df[X].max() + 0.5
+        
+    bins = dict(
+                start=bin_start,  
+                end=bin_end,      
+                size=bin_size     
+            )  
+    return bins
 
 
 def classify_variable_types(df, threshold=20):
@@ -137,7 +154,6 @@ def univariate_plotting(df, X, hue, variable_types, x_label=None) -> None:
 
 @st.fragment
 def univariate_plotting_interactive(df, X, hue, variable_types, x_label=None):
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.2, 0.8])
 
     if hue:
         unique_categories = df[hue].unique()
@@ -146,21 +162,8 @@ def univariate_plotting_interactive(df, X, hue, variable_types, x_label=None):
         unique_categories = [None]  
         colors = ['#636EFA']  
 
-    if variable_types[X] == 'continuous':
-        bin_size, bin_width = freedman_diaconis_rule(df[X])
-        bin_size = bin_width if bin_width > 0 else (df[X].max() - df[X].min())/20
-        bin_start = df[X].min()
-        bin_end = df[X].max()
-    else:
-        bin_size = 1  
-        bin_start = df[X].min()-0.5
-        bin_end = df[X].max()+0.5
-        
-    bins = dict(
-                start=bin_start,  
-                end=bin_end,      
-                size=bin_size     
-            )  
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.2, 0.8])
+    bins = define_binning(df, X, variable_types)
 
     for i, category in enumerate(unique_categories):
         if hue:
@@ -481,4 +484,169 @@ def id_survey_shap_bar_plot_interactive(survey_id_var, selected_survey, data, sh
                                      data.drop(columns=[survey_id_var]), ntop=5)
     st.altair_chart(chart, use_container_width=True)
 
+def generate_palette_colors(num_colors):
+        """Generate a list of random hex colors."""
+        colors_array = np.random.randint(0, 256, size=(num_colors, 3))
+        palette = ["#{:02x}{:02x}{:02x}".format(r, g, b) for r, g, b in colors_array]
+        return palette
 
+@st.fragment
+def univariate_plotting_interactive_enum(df, X, hue, variable_types, x_label=None):
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.2, 0.8])
+
+    def generate_palette_colors(num_colors):
+        """Generate a list of random hex colors."""
+        colors_array = np.random.randint(0, 256, size=(num_colors, 3))
+        palette = ["#{:02x}{:02x}{:02x}".format(r, g, b) for r, g, b in colors_array]
+        return palette
+
+    if hue:
+        unique_categories = df[hue].unique()
+        if hue == "enum_id":
+            selected_categories = st.multiselect("Select categories for hue:", 
+                                                 unique_categories, key='multi_select_enum_id')
+            if 'palette_colors' not in st.session_state:
+                st.session_state.palette_colors = generate_palette_colors(len(unique_categories))
+
+            colors = [st.session_state.palette_colors[unique_categories.tolist().index(cat)] for cat in selected_categories] if selected_categories else []
+        elif hue == "anomaly_prediction":
+            selected_categories = unique_categories
+            colors = ["#FFA500", "#636EFA"]
+    else:
+        selected_categories = [None]
+        colors = ['#636EFA']
+        
+    bins = define_binning(df, X, variable_types)
+
+    for i, category in enumerate(selected_categories):
+        if hue and category:
+            subset = df[df[hue] == category]
+            color = colors[i % len(colors)]
+        else:
+            subset = df
+            color = colors[0]
+        
+        box_trace = go.Box(x=subset[X], name=str(category) if hue else "", 
+                           boxmean='sd', orientation='h', marker=dict(color=color),
+                           legendgroup=str(category) if hue else "All Data",
+                           showlegend=False
+                            )
+        fig.add_trace(box_trace, row=1, col=1)
+
+    for i, category in enumerate(selected_categories):
+        if hue and category:
+            subset = df[df[hue] == category]
+            color = colors[i % len(colors)]
+        else:
+            subset = df
+            color = colors[0]
+        
+        hist_trace = go.Histogram(x=subset[X], name=str(category) if hue else "", opacity=0.7, 
+                                  marker=dict(color=color),
+                                  histnorm='probability density' if variable_types[X] != 'discrete' else None,
+                                  legendgroup=str(category) if hue else "All Data", showlegend=True,  
+                                  xbins=bins)
+        fig.add_trace(hist_trace, row=2, col=1)
+
+    fig.update_layout(
+        height=800, width=600,   
+        barmode='group' if variable_types[X] == 'discrete' else 'overlay', 
+        title='Univariate Plot for {} grouped by Anomaly Prediction'.format(x_label) if hue else 'Univariate Plot for {}'.format(x_label),
+        title_x=0.25 if hue else 0.35, legend=dict(title=hue if hue else "All Data")
+    )
+
+    if x_label:
+        fig.update_xaxes(title_text=x_label, row=2, col=1)
+    else:
+        fig.update_xaxes(title_text=X, row=2, col=1)
+
+    fig.update_yaxes(title_text="Density", row=1, col=1)  
+    fig.update_yaxes(title_text="Count", row=2, col=1)
+    
+    if variable_types[X] == 'discrete':
+        unique_vals = df[X].unique()
+        tick_vals = sorted(unique_vals)
+        tick_text = [str(val) for val in tick_vals]
+        fig.update_xaxes(tickvals=tick_vals, ticktext=tick_text, 
+                         ticks='outside', tickwidth=3, row=2, col=1)
+
+    st.plotly_chart(fig, use_container_width=True)
+
+@st.fragment
+def univariate_plotting_interactive_enum_anomaly(df, X, hue, variable_types, x_label=None):
+    
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.2, 0.8])
+    bins = define_binning(df, X, variable_types)
+
+    unique_enums = df['enum_id'].unique()
+    selected_enums = st.multiselect("Select Enumerator(s):", unique_enums, key="enum_filter", 
+                                    default = unique_enums[0] if len(unique_enums) > 0 else st.error("No Enumerators"),
+                                    placeholder="Enumerator ID(s)")
+
+    filtered_df = df[df['enum_id'].isin(selected_enums)] if selected_enums else df
+
+    if 'enum_color_map' not in st.session_state:
+        st.session_state.enum_color_map = {enum: color for enum, color in zip(unique_enums, generate_palette_colors(len(unique_enums)))}
+    
+    if selected_enums:
+        st.write("Descriptive Statistics for Selected Enumerators:")
+        st.dataframe(filtered_df.groupby(filtered_df['enum_id'])[X].describe())
+        colors = [st.session_state.enum_color_map[enum] for enum in selected_enums]
+    else:
+        colors = ["#FFA500", "#636EFA"]
+
+    if hue == "anomaly_prediction":
+        unique_categories = filtered_df[hue].unique()
+        mapped_categories = ["Not Anomaly" if x == 0 else "Anomaly" for x in unique_categories]
+        selected_categories = mapped_categories
+    else:
+        selected_categories = selected_enums
+
+    for i, category in enumerate(selected_categories):
+        if hue == "anomaly_prediction":
+            subset = filtered_df[filtered_df[hue] == (1 if category == "Anomaly" else 0)]
+        else:
+            subset = filtered_df[filtered_df['enum_id'] == category]
+        color = colors[i] if len(colors) > i else "#636EFA"
+        
+        box_trace = go.Box(
+            x=subset[X], 
+            name=str(category), 
+            boxmean='sd', 
+            orientation='h', 
+            marker=dict(color=color),
+            legendgroup=str(category),
+            showlegend=True
+        )
+        fig.add_trace(box_trace, row=1, col=1)
+
+        hist_trace = go.Histogram(
+            x=subset[X], 
+            name=str(category), 
+            opacity=0.7, 
+            marker=dict(color=color),
+            histnorm='probability density' if variable_types[X] != 'discrete' else None,
+            legendgroup=str(category), 
+            showlegend=False,  
+            xbins=bins
+        )
+        fig.add_trace(hist_trace, row=2, col=1)
+
+    fig.update_layout(
+        height=800, width=600,   
+        barmode='group' if variable_types[X] == 'discrete' else 'overlay', 
+        title=f'Univariate Plot for {x_label}<br>filtered by Enumerator ID: {", ".join(selected_enums)}<br>' + 
+                        ('grouped by Anomaly Prediction' if hue == "anomaly_prediction" else ''),
+        title_x=0.3, legend=dict(title=hue))
+
+    fig.update_xaxes(title_text=x_label if x_label else X, row=2, col=1)
+    fig.update_yaxes(title_text="Density", row=1, col=1)  
+    fig.update_yaxes(title_text="Count", row=2, col=1)
+
+    if variable_types[X] == 'discrete':
+        unique_vals = filtered_df[X].unique()
+        tick_vals = sorted(unique_vals)
+        tick_text = [str(val) for val in tick_vals]
+        fig.update_xaxes(tickvals=tick_vals, ticktext=tick_text, ticks='outside', tickwidth=3, row=2, col=1)
+
+    st.plotly_chart(fig, use_container_width=True)
