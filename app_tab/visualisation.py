@@ -5,11 +5,10 @@ from app_utils import plot_tools as pt
 THRESHOLD_QUANTITATIVE_TYPE = 20
 
 def display():
-    
     if "variable_mapping" not in st.session_state:
         st.error("Failed to load variable mapping.")
         return
-    #st.write(st.session_state.variable_mapping)
+
     features_list = list(st.session_state.variable_mapping.keys())
     features_labels = list(st.session_state.variable_mapping.values())
 
@@ -21,24 +20,21 @@ def display():
     hue_mapping = dict(zip(hue_var_list, labels_hue))
     reverse_hue_mapping = {v: k for k, v in hue_mapping.items()}
 
-    # Exclude certain columns from features_list
     filtered_features_list = [col for col in features_list if col not in ['audit_id', 'enum_id', 'anomaly_prediction']]
     filtered_labels_list = [label for col, label in zip(features_list, features_labels) if col not in ['audit_id', 'enum_id', 'anomaly_prediction']]
-    
+
     with sub_tab1:
         col1, col2 = st.columns([1, 5])
         with col1:
             variable = st.selectbox("Choose a variable:", filtered_labels_list, index=None)
             hue_univariate_label = st.selectbox("Choose a grouping variable:", labels_hue, key="HUE_univariate", index=0)
-            hue_univariate = reverse_hue_mapping[hue_univariate_label] 
+            hue_univariate = reverse_hue_mapping[hue_univariate_label]
             if hue_univariate == "":
                 hue_univariate = None
         with col2:
             if variable:
                 variable_name = filtered_features_list[filtered_labels_list.index(variable)]
                 pt.univariate_plotting_interactive(df=predic_data, X=variable_name, hue=hue_univariate, variable_types=variable_types, x_label=variable)
-                fig = pt.univariate_plotting(df=predic_data, X=variable_name, hue=hue_univariate, variable_types=variable_types, x_label=variable)
-                st.pyplot(fig)
 
     with sub_tab2:
         col1, col2 = st.columns([1, 5])
@@ -53,19 +49,26 @@ def display():
             if X and Y:
                 X_name = filtered_features_list[filtered_labels_list.index(X)]
                 Y_name = filtered_features_list[filtered_labels_list.index(Y)]
-                
+
                 kernel_plot = pt.kernel_density_plot(df=predic_data, X=X_name, Y=Y_name, hue=hue_bivariate, x_label=X, y_label=Y)
-                catplot = pt.catplot_multicat(df=predic_data, X=X_name, Y=Y_name, hue=hue_bivariate, variable_types=variable_types, x_label=X, y_label=Y)
-                distplot = pt.displot(df=predic_data, X=X_name, Y=Y_name, hue=hue_bivariate, x_label=X, y_label=Y)
+                avg_catplot_multicat = pt.avg_catplot_multicat(df=predic_data, X=X_name, Y=Y_name, hue=hue_bivariate, variable_types=variable_types, x_label=X, y_label=Y)
+                density_heatmap = pt.density_heatmap(df=predic_data, X=X_name, Y=Y_name, hue=hue_bivariate, x_label=X, y_label=Y)
 
-                kernel_tab, catplot_tab, displot_tab = st.tabs(["Kernel Density Plot", "Catplot", "Distplot"])
+                # Seaborn version
+                # kernel_plot_seaborn = pt.kernel_density_plot_seaborn(df=predic_data, X=X_name, Y=Y_name, hue=hue_bivariate, x_label=X, y_label=Y)
+                # catplot_seaborn = pt.catplot_multicat_seaborn(df=predic_data, X=X_name, Y=Y_name, hue=hue_bivariate, variable_types=variable_types, x_label=X, y_label=Y)
+                # distplot_seaborn = pt.displot_seaborn(df=predic_data, X=X_name, Y=Y_name, hue=hue_bivariate, x_label=X, y_label=Y)
+
+
+                kernel_tab, catplot_tab, displot_tab = st.tabs(["Kernel Density Plot", "Average Plot by Categories", "Density Heatmap"])
+                # if X_name != X_name:
                 with kernel_tab:
-                    st.pyplot(kernel_plot)
+                        st.plotly_chart(kernel_plot)
+                        # st.pyplot(kernel_plot_seaborn)
                 with catplot_tab:
-                    st.pyplot(catplot)
+                    st.plotly_chart(avg_catplot_multicat)
+                    # st.pyplot(catplot_seaborn)
                 with displot_tab:
-                    st.pyplot(distplot)
-
-
-
+                    st.plotly_chart(density_heatmap)
+                    # st.pyplot(distplot_seaborn)
 

@@ -11,7 +11,8 @@ def display():
      with sub_tab1:
           col1, col2 = st.columns([2, 4])
           with col1:
-               pt.pie_chart_pct_anomalies(df)
+               fig_pie = pt.pie_chart_pct_anomalies(df)
+               st.plotly_chart(fig_pie)
           with col2:
                # summary_stats = df.describe()
                st.dataframe(df.set_index('audit_id'), hide_index= False)

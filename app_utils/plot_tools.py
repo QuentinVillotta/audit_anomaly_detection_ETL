@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from scipy import stats
 import seaborn as sns
 import streamlit as st
 import matplotlib.pyplot as plt
@@ -69,7 +70,7 @@ def load_variable_attribute(var_name, var_attribute):
     return mapping
 
 # Summary tab
-
+@st.fragment
 def pie_chart_pct_anomalies(df):
     # 1. General indicator - % of detected anomalies
     total_surveys = len(df)
@@ -81,7 +82,7 @@ def pie_chart_pct_anomalies(df):
     })
     fig_pie = px.pie(pie_data, values='Count', names='Type', title="Percentage of Detected Anomalies")
     # Display the pie chart
-    st.plotly_chart(fig_pie, use_container_width=True)
+    return fig_pie
 
 # Univariate Analysis
 @st.fragment
@@ -190,9 +191,9 @@ def univariate_plotting_interactive(df, X, hue, variable_types, x_label=None):
     st.plotly_chart(fig, use_container_width=True)
 
 
-# Bivariate Analysis 
+# # Bivariate Analysis 
 @st.fragment
-def kernel_density_plot(df, X, Y, hue, x_label=None, y_label=None) -> None:
+def kernel_density_plot_seaborn(df, X, Y, hue, x_label=None, y_label=None) -> None:
     fig = sns.JointGrid(data=df, x=X, y=Y, hue=hue)
     fig.plot_joint(sns.kdeplot, fill=False, alpha=0.4, common_norm=True, warn_singular=False)
     fig.plot_joint(sns.rugplot, height=-.02, clip_on=False, alpha=.5)
@@ -205,7 +206,7 @@ def kernel_density_plot(df, X, Y, hue, x_label=None, y_label=None) -> None:
     return fig
 
 @st.fragment
-def catplot_multicat(df, X, Y, hue, variable_types, x_label=None, y_label=None) -> None:
+def catplot_multicat_seaborn(df, X, Y, hue, variable_types, x_label=None, y_label=None) -> None:
     if variable_types[X] == 'discrete':
         fig = sns.catplot(data=df, x=X, y=Y, hue=hue, kind="bar", estimator='mean', errorbar=('ci', 95))
     else:
@@ -220,7 +221,7 @@ def catplot_multicat(df, X, Y, hue, variable_types, x_label=None, y_label=None) 
     return fig
 
 @st.fragment
-def displot(df, X, Y, hue, x_label=None, y_label=None) -> None:
+def displot_seaborn(df, X, Y, hue, x_label=None, y_label=None) -> None:
     fig = sns.displot(df, x=X, y=Y, col=hue, rug=True)
 
     for ax in fig.axes.flatten():
@@ -230,6 +231,163 @@ def displot(df, X, Y, hue, x_label=None, y_label=None) -> None:
             ax.set_ylabel(y_label)
 
     return fig
+
+
+# Bivariate Analysis - Plotly version
+
+@st.fragment
+def kernel_density_plot(df, X, Y, hue, x_label=None, y_label=None) -> None:
+    """
+    Generates a kernel density plot using Plotly, allowing for the examination of 
+    relationships between two continuous variables. 
+    If a grouping variable (hue) is specified, it will color the data accordingly.
+
+    Parameters:
+    - df (pd.DataFrame): DataFrame containing the data.
+    - X (str): Column name for the X-axis.
+    - Y (str): Column name for the Y-axis.
+    - hue (str): Column name for the grouping variable.
+    - x_label (str): Label for the X-axis.
+    - y_label (str): Label for the Y-axis.
+    
+    Returns:
+    - None: Displays a plot using Streamlit.
+    """
+    # If hue is None, plot without grouping by color
+    if hue is None:
+        fig = px.density_contour(df, x=X, y=Y,  marginal_x="violin", marginal_y="violin")
+        
+    else:
+        fig = px.density_contour(df, x=X, y=Y, color=hue, marginal_x="violin", marginal_y="violin")
+    
+    # Add rug plot
+    # fig.add_trace(px.rug(df, x=X, y=Y).data[0])
+    
+    # Set axis labels if provided
+    if x_label:
+        fig.update_layout(xaxis_title=x_label, yaxis_title=y_label)
+
+    # Render the plot using Plotly
+    return fig
+
+def compute_ci(series, confidence=0.95):
+    n = len(series)
+    mean = np.mean(series)
+    stderr = stats.sem(series)  # Erreur standard
+    h = stderr * stats.t.ppf((1 + confidence) / 2, n - 1)  # Intervalle de confiance
+    return mean, h
+
+
+@st.fragment
+def avg_catplot_multicat(df, X, Y, hue, variable_types, x_label=None, y_label=None) -> None:
+    """
+    Generates a categorical plot (bar plot) using Plotly, allowing comparison of
+    multiple categorical or binned numerical variables.
+
+    Parameters:
+    - df (pd.DataFrame): DataFrame containing the data.
+    - X (str): Column name for the X-axis.
+    - Y (str): Column name for the Y-axis (mean values will be displayed).
+    - hue (str): Column name for the grouping variable.
+    - variable_types (dict): Dictionary mapping variable names to 'discrete' or 'continuous'.
+    - x_label (str): Label for the X-axis.
+    - y_label (str): Label for the Y-axis.
+    
+    Returns:
+    - None: Displays a plot using Streamlit.
+    """
+
+    # Function to compute mean and confidence interval
+    def compute_ci(series, confidence=0.95):
+        n = len(series)
+        mean = np.mean(series)
+        stderr = stats.sem(series)  # Standard error
+        h = stderr * stats.t.ppf((1 + confidence) / 2, n - 1)  # Confidence interval
+        return mean, h
+        
+    # Check if the X variable is discrete or continuous
+    if variable_types[X] == 'discrete':     
+        if hue is None:
+            df_grouped = df.groupby([X]).apply(lambda group: pd.Series({
+                'mean': group[Y].mean(),
+                'ci': compute_ci(group[Y])[1]
+            })).reset_index()
+            fig = px.bar(df_grouped, x=X, y='mean', barmode='group', error_y='ci')
+        else:
+            df_grouped = df.groupby([X, hue]).apply(lambda group: pd.Series({
+                'mean': group[Y].mean(),
+                'ci': compute_ci(group[Y])[1]
+            })).reset_index()
+            df_grouped[hue] = df_grouped[hue].astype(str)
+            fig = px.bar(df_grouped, x=X, y='mean', color=hue, barmode='group', error_y='ci')
+    
+    else:
+        # Use Freedman-Diaconis rule for binning and convert intervals to strings
+        num_bins, _ = freedman_diaconis_rule(df[X])
+        # Create binned data (categorical intervals)
+        df['quantitative_var_binned'] = pd.cut(df[X], bins=num_bins)
+        # Group by the binned intervals and calculate the mean for Y
+        if hue is None:
+            df_grouped = df.groupby(['quantitative_var_binned']).apply(lambda group: pd.Series({
+                'mean': group[Y].mean(),
+                'ci': compute_ci(group[Y])[1]
+            })).reset_index()
+        else:
+            df_grouped = df.groupby(['quantitative_var_binned', hue]).apply(lambda group: pd.Series({
+                'mean': group[Y].mean(),
+                'ci': compute_ci(group[Y])[1]
+            })).reset_index()
+            df_grouped[hue] = df_grouped[hue].astype(str)
+
+        # Ensure the intervals are ordered correctly
+        df_grouped = df_grouped.sort_values(by='quantitative_var_binned', key=lambda x: x.cat.codes)
+        # Convert intervals to string after sorting
+        df_grouped['quantitative_var_binned'] = df_grouped['quantitative_var_binned'].astype(str)
+
+        # Plot using Plotly
+        if hue is None:
+            fig = px.bar(df_grouped, x='quantitative_var_binned', y='mean', barmode='group', error_y='ci')
+        else:
+            fig = px.bar(df_grouped, x='quantitative_var_binned', y='mean', color=hue, barmode='group', error_y='ci')
+
+    # Set axis labels if provided
+    if x_label:
+        fig.update_layout(xaxis_title=x_label, yaxis_title=f'Mean of {y_label}')
+
+    # Render the Plotly chart
+    return fig
+
+
+@st.fragment
+def density_heatmap(df, X, Y, hue, x_label=None, y_label=None) -> None:
+    """
+    Generates a distribution plot using Plotly, allowing for the visualization 
+    of how one variable is distributed across different categories of another variable.
+
+    Parameters:
+    - df (pd.DataFrame): DataFrame containing the data.
+    - X (str): Column name for the X-axis.
+    - Y (str): Column name for the Y-axis.
+    - hue (str): Column name for the grouping variable.
+    - x_label (str): Label for the X-axis.
+    - y_label (str): Label for the Y-axis.
+    
+    Returns:
+    - None: Displays a plot using Streamlit.
+    """
+    # If hue is None, plot without grouping by color
+    if hue is None:
+        fig = px.density_heatmap(df, x=X, y=Y, marginal_x="box", marginal_y="box")
+    else:
+        fig = px.density_heatmap(df, x=X, y=Y, facet_col=hue, marginal_x="box", marginal_y="box")
+    
+    # Set axis labels if provided
+    if x_label:
+        fig.update_layout(xaxis_title=x_label, yaxis_title=y_label)
+
+    # Render the Plotly chart
+    return fig
+
 
 # SHAP Plot
 def st_shap(plot, height=None):
