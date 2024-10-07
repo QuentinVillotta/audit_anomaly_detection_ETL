@@ -341,22 +341,8 @@ def univariate_plotting_interactive_enum(df, X, hue, variable_types, x_label=Non
     else:
         selected_categories = [None]
         colors = ['#636EFA']
-
-    if variable_types[X] == 'continuous':
-        bin_size, bin_width = freedman_diaconis_rule(df[X])
-        bin_size = bin_width if bin_width > 0 else (df[X].max() - df[X].min()) / 20
-        bin_start = df[X].min()
-        bin_end = df[X].max()
-    else:
-        bin_size = 1  
-        bin_start = df[X].min() - 0.5
-        bin_end = df[X].max() + 0.5
         
-    bins = dict(
-                start=bin_start,  
-                end=bin_end,      
-                size=bin_size     
-            )  
+    bins = define_binning(df, X, variable_types)
 
     for i, category in enumerate(selected_categories):
         if hue and category:
@@ -412,7 +398,6 @@ def univariate_plotting_interactive_enum(df, X, hue, variable_types, x_label=Non
 
     st.plotly_chart(fig, use_container_width=True)
 
-
 @st.fragment
 def univariate_plotting_interactive_enum_anomaly(df, X, hue, variable_types, x_label=None):
     
@@ -420,52 +405,34 @@ def univariate_plotting_interactive_enum_anomaly(df, X, hue, variable_types, x_l
     bins = define_binning(df, X, variable_types)
 
     unique_enums = df['enum_id'].unique()
-    selected_enums = st.multiselect("Select Enumerator(s):", unique_enums, key="enum_filter",
-                                    placeholder="enumerators")
+    selected_enums = st.multiselect("Select Enumerator(s):", unique_enums, key="enum_filter", 
+                                    default = unique_enums[0] if len(unique_enums) > 0 else st.error("No Enumerators"),
+                                    placeholder="Enumerator ID(s)")
 
+    filtered_df = df[df['enum_id'].isin(selected_enums)] if selected_enums else df
+        
     if selected_enums:
-        filtered_df = df[df['enum_id'].isin(selected_enums)]
+        st.write("Descriptive Statistics for Selected Enumerators:")
         st.dataframe(filtered_df.groupby(filtered_df['enum_id'])[X].describe())
-    else:
-        filtered_df = df
 
-    group_by_anomaly = st.checkbox("Group by Anomaly Prediction", key="group_by_anomaly")
-    
-    selected_categories = []
+    if 'enum_color_map' not in st.session_state:
+        st.session_state.enum_color_map = {enum: color for enum, color in zip(unique_enums, generate_palette_colors(len(unique_enums)))}
 
-    if group_by_anomaly:
-        hue = "anomaly_prediction"
+    colors = [st.session_state.enum_color_map[enum] for enum in selected_enums]
+
+    if hue == "anomaly_prediction":
         unique_categories = filtered_df[hue].unique()
-        selected_categories = st.multiselect("Select categories for hue:", unique_categories, 
-                                             key='multi_select_categories', 
-                                             placeholder="select category Anomaly = 1, Not Anomaly = 0")
+        mapped_categories = ["Not Anomaly" if x == 0 else "Anomaly" for x in unique_categories]
+        selected_categories = mapped_categories
     else:
         selected_categories = selected_enums
-        hue = "enum_id"
-    
-    if len(filtered_df) == 0:
-        st.warning("No data available for the selected enum_id(s). Please choose different options.")
-        return
-
-    if 'palette_colors' not in st.session_state:
-        st.session_state.palette_colors = generate_palette_colors(len(selected_categories))
-
-    if len(st.session_state.palette_colors) < len(selected_categories):
-        st.session_state.palette_colors = generate_palette_colors(len(selected_categories))
-
-    colors = [st.session_state.palette_colors[i % len(st.session_state.palette_colors)] for i in range(len(selected_categories))]
-
-    if not selected_categories:
-        selected_categories = [None]
-        colors = ['#636EFA']
 
     for i, category in enumerate(selected_categories):
-        if group_by_anomaly and category is not None:
-            subset = filtered_df[filtered_df[hue] == category]
-            color = colors[i] if len(colors) > i else "#636EFA"
+        if hue == "anomaly_prediction":
+            subset = filtered_df[filtered_df[hue] == (1 if category == "Anomaly" else 0)]
         else:
             subset = filtered_df[filtered_df['enum_id'] == category]
-            color = colors[i] if len(colors) > i else "#636EFA"
+        color = colors[i] if len(colors) > i else "#636EFA"
         
         box_trace = go.Box(
             x=subset[X], 
@@ -493,15 +460,11 @@ def univariate_plotting_interactive_enum_anomaly(df, X, hue, variable_types, x_l
     fig.update_layout(
         height=800, width=600,   
         barmode='group' if variable_types[X] == 'discrete' else 'overlay', 
-        title=f'Univariate Plot for {x_label} filtered by enum_id(s): {", ".join(selected_enums)}<br>' + 
-                        ('<br>grouped by Anomaly Prediction' if group_by_anomaly else ''),
-                        title_x=0.2, legend=dict(title=hue))
+        title=f'Univariate Plot for {x_label}<br>filtered by Enumerator ID: {", ".join(selected_enums)}<br>' + 
+                        ('grouped by Anomaly Prediction' if hue == "anomaly_prediction" else ''),
+        title_x=0.3, legend=dict(title=hue))
 
-    if x_label:
-        fig.update_xaxes(title_text=x_label, row=2, col=1)
-    else:
-        fig.update_xaxes(title_text=X, row=2, col=1)
-
+    fig.update_xaxes(title_text=x_label if x_label else X, row=2, col=1)
     fig.update_yaxes(title_text="Density", row=1, col=1)  
     fig.update_yaxes(title_text="Count", row=2, col=1)
 
