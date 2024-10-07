@@ -55,10 +55,10 @@ def display():
                                            selected_survey, 
                                            features_label, 
                                            shap_values)
-                pt.id_survey_shap_bar_plot(SURVEY_ID_VAR, 
-                                           selected_survey, 
-                                           features_label, 
-                                           shap_values)
+                # pt.id_survey_shap_bar_plot(SURVEY_ID_VAR, 
+                #                            selected_survey, 
+                #                            features_label, 
+                #                            shap_values)
             with sub_sub2_tab2:
                 pt.id_survey_shap_force_plot(survey_id_var=SURVEY_ID_VAR, 
                                              selected_survey=selected_survey, 

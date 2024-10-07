@@ -3,7 +3,7 @@ import yaml
 import os
 from app_utils import data_io
 from app_utils import plot_tools as pt
-from app_tab import welcome, summary, visualisation, interpretation
+from app_tab import welcome, summary, visualisation, interpretation, run_anomaly_detection
 
 import pickle
 import logging
@@ -49,25 +49,21 @@ if 'ETL_output' not in st.session_state:
         st.session_state.ETL_output = ETL_output
 
 st.title("Anomaly Detection")
-st.header("User Guide", divider="gray")
-st.write("""\
-        The app will allow you to easily download, process and analyse the audit files collected
-        for your project. It will run a anomaly detection solution to flag suspicios surveys.\
-        Please follow the instructions below for running the solution or import its results. \
-        """)
+# Menu/Tabs app
+list_tab = ["Welcome", "Run Anomaly Detection", "Summary", "Interpretation", "Visualization"]
+welcome_tab, run__anomaly_detection_tab, summary_tab,  interpretation_tab, visualization_tab= st.tabs(list_tab)
 
-if st.button("Clear Tabs/Outputs"):
-    data_io.clear_outputs()
+
 # if st.session_state.click_count == 0:  
 #     data_io.delete_file(MODEL_OUTPUT_PATH)
 #     data_io.delete_file(PREDICTION_PATH)
 
-# Menu/Tabs app
-list_tab = ["Welcome", "Summary", "Interpretation", "Visualization"]
-welcome_tab, summary_tab, interpretation_tab, visualization_tab= st.tabs(list_tab)
 
 with welcome_tab:
     welcome.display()
+
+with run__anomaly_detection_tab:
+    run_anomaly_detection.display()
 
 if st.session_state.ETL_output:
     with summary_tab: 
