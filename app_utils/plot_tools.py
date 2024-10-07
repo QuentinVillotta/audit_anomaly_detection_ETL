@@ -425,6 +425,8 @@ def univariate_plotting_interactive_enum_anomaly(df, X, hue, variable_types, x_l
 
     if selected_enums:
         filtered_df = df[df['enum_id'].isin(selected_enums)]
+        st.dataframe(filtered_df.groupby(filtered_df['enum_id'])[X].describe().head())
+
     else:
         filtered_df = df
 
