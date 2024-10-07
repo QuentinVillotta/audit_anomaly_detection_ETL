@@ -77,12 +77,37 @@ def pie_chart_pct_anomalies(df):
     total_anomalies = df['anomaly_prediction'].sum()
     # Pie chart of detected anomalies
     pie_data = pd.DataFrame({
-    "Type": ["Anomalies", "Non-Anomalies"],
+    "Type": ["Anomaly", "No Anomaly"],
     "Count": [total_anomalies, total_surveys - total_anomalies]
     })
-    fig_pie = px.pie(pie_data, values='Count', names='Type', title="Percentage of Detected Anomalies")
+    fig_pie = px.pie(pie_data, values='Count', names='Type', title="Percentage of detected anomalies")
     # Display the pie chart
     return fig_pie
+
+
+@st.fragment
+def plot_anomaly_count(df):
+    # Group the dataframe and count occurrences of anomaly prediction by enumerator
+    survey_count = df.groupby(['enum_id', 'anomaly_prediction']).size().unstack(fill_value=0)
+    survey_count.columns = ['No Anomaly', 'Anomaly']
+    
+    # Reset index to use it for Plotly
+    survey_count = survey_count.reset_index()
+
+    # Convert from wide to long format to make it compatible with Plotly
+    survey_count_long = survey_count.melt(id_vars='enum_id', value_vars=['No Anomaly', 'Anomaly'], 
+                                          var_name='Anomaly Type', value_name='Count')
+
+    # Create a Plotly bar chart
+    fig = px.bar(survey_count_long, x='enum_id', y='Count', color='Anomaly Type', barmode='group',
+                 labels={'enum_id': 'Enumerator ID', 'Count': 'Number of surveys', 'Anomaly Type': 'Anomaly status'},
+                 title='Number of surveys per enumerator by anomaly status')
+
+    # Ensure the x-axis is ordered by the number of anomalies in descending order
+    fig.update_layout(xaxis={'categoryorder':'total descending'})
+
+    # Display the Plotly chart in Streamlit
+    return fig, survey_count_long
 
 # Univariate Analysis
 @st.fragment
@@ -191,49 +216,7 @@ def univariate_plotting_interactive(df, X, hue, variable_types, x_label=None):
     st.plotly_chart(fig, use_container_width=True)
 
 
-# # Bivariate Analysis 
-@st.fragment
-def kernel_density_plot_seaborn(df, X, Y, hue, x_label=None, y_label=None) -> None:
-    fig = sns.JointGrid(data=df, x=X, y=Y, hue=hue)
-    fig.plot_joint(sns.kdeplot, fill=False, alpha=0.4, common_norm=True, warn_singular=False)
-    fig.plot_joint(sns.rugplot, height=-.02, clip_on=False, alpha=.5)
-    fig.plot_marginals(sns.boxplot)
-
-    # Set axis labels
-    if x_label:
-        fig.set_axis_labels(x_label, y_label)
-
-    return fig
-
-@st.fragment
-def catplot_multicat_seaborn(df, X, Y, hue, variable_types, x_label=None, y_label=None) -> None:
-    if variable_types[X] == 'discrete':
-        fig = sns.catplot(data=df, x=X, y=Y, hue=hue, kind="bar", estimator='mean', errorbar=('ci', 95))
-    else:
-        num_bins, _ = freedman_diaconis_rule(df[X])
-        df['quantitative_var_binned'] = pd.cut(df[X], bins=num_bins)
-        fig = sns.catplot(data=df, x="quantitative_var_binned", y=Y, hue=hue, kind="bar", estimator='mean', errorbar=('ci', 95))
-
-    if x_label:
-        fig.set(xlabel=x_label, ylabel=y_label)  # Set both x and y axis labels
-
-    fig.tick_params(axis='x', rotation=90)
-    return fig
-
-@st.fragment
-def displot_seaborn(df, X, Y, hue, x_label=None, y_label=None) -> None:
-    fig = sns.displot(df, x=X, y=Y, col=hue, rug=True)
-
-    for ax in fig.axes.flatten():
-        if x_label:
-            ax.set_xlabel(x_label)
-        if y_label:
-            ax.set_ylabel(y_label)
-
-    return fig
-
-
-# Bivariate Analysis - Plotly version
+# Bivariate Analysis 
 
 @st.fragment
 def kernel_density_plot(df, X, Y, hue, x_label=None, y_label=None) -> None:
@@ -269,14 +252,6 @@ def kernel_density_plot(df, X, Y, hue, x_label=None, y_label=None) -> None:
 
     # Render the plot using Plotly
     return fig
-
-def compute_ci(series, confidence=0.95):
-    n = len(series)
-    mean = np.mean(series)
-    stderr = stats.sem(series)  # Erreur standard
-    h = stderr * stats.t.ppf((1 + confidence) / 2, n - 1)  # Intervalle de confiance
-    return mean, h
-
 
 @st.fragment
 def avg_catplot_multicat(df, X, Y, hue, variable_types, x_label=None, y_label=None) -> None:
@@ -357,7 +332,6 @@ def avg_catplot_multicat(df, X, Y, hue, variable_types, x_label=None, y_label=No
     # Render the Plotly chart
     return fig
 
-
 @st.fragment
 def density_heatmap(df, X, Y, hue, x_label=None, y_label=None) -> None:
     """
@@ -387,6 +361,48 @@ def density_heatmap(df, X, Y, hue, x_label=None, y_label=None) -> None:
 
     # Render the Plotly chart
     return fig
+
+## Seaborn version
+# @st.fragment
+# def kernel_density_plot_seaborn(df, X, Y, hue, x_label=None, y_label=None) -> None:
+#     fig = sns.JointGrid(data=df, x=X, y=Y, hue=hue)
+#     fig.plot_joint(sns.kdeplot, fill=False, alpha=0.4, common_norm=True, warn_singular=False)
+#     fig.plot_joint(sns.rugplot, height=-.02, clip_on=False, alpha=.5)
+#     fig.plot_marginals(sns.boxplot)
+
+#     # Set axis labels
+#     if x_label:
+#         fig.set_axis_labels(x_label, y_label)
+
+#     return fig
+
+# @st.fragment
+# def catplot_multicat_seaborn(df, X, Y, hue, variable_types, x_label=None, y_label=None) -> None:
+#     if variable_types[X] == 'discrete':
+#         fig = sns.catplot(data=df, x=X, y=Y, hue=hue, kind="bar", estimator='mean', errorbar=('ci', 95))
+#     else:
+#         num_bins, _ = freedman_diaconis_rule(df[X])
+#         df['quantitative_var_binned'] = pd.cut(df[X], bins=num_bins)
+#         fig = sns.catplot(data=df, x="quantitative_var_binned", y=Y, hue=hue, kind="bar", estimator='mean', errorbar=('ci', 95))
+
+#     if x_label:
+#         fig.set(xlabel=x_label, ylabel=y_label)  # Set both x and y axis labels
+
+#     fig.tick_params(axis='x', rotation=90)
+#     return fig
+
+# @st.fragment
+# def displot_seaborn(df, X, Y, hue, x_label=None, y_label=None) -> None:
+#     fig = sns.displot(df, x=X, y=Y, col=hue, rug=True)
+
+#     for ax in fig.axes.flatten():
+#         if x_label:
+#             ax.set_xlabel(x_label)
+#         if y_label:
+#             ax.set_ylabel(y_label)
+
+#     return fig
+
 
 
 # SHAP Plot
