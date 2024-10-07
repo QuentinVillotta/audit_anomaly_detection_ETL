@@ -410,15 +410,16 @@ def univariate_plotting_interactive_enum_anomaly(df, X, hue, variable_types, x_l
                                     placeholder="Enumerator ID(s)")
 
     filtered_df = df[df['enum_id'].isin(selected_enums)] if selected_enums else df
-        
-    if selected_enums:
-        st.write("Descriptive Statistics for Selected Enumerators:")
-        st.dataframe(filtered_df.groupby(filtered_df['enum_id'])[X].describe())
 
     if 'enum_color_map' not in st.session_state:
         st.session_state.enum_color_map = {enum: color for enum, color in zip(unique_enums, generate_palette_colors(len(unique_enums)))}
-
-    colors = [st.session_state.enum_color_map[enum] for enum in selected_enums]
+    
+    if selected_enums:
+        st.write("Descriptive Statistics for Selected Enumerators:")
+        st.dataframe(filtered_df.groupby(filtered_df['enum_id'])[X].describe())
+        colors = [st.session_state.enum_color_map[enum] for enum in selected_enums]
+    else:
+        colors = ["#FFA500", "#636EFA"]
 
     if hue == "anomaly_prediction":
         unique_categories = filtered_df[hue].unique()
