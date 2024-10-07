@@ -7,6 +7,11 @@ from kedro.framework.session import KedroSession
 from kedro.framework.startup import bootstrap_project
 from app_utils import kobo_tools
 
+#doesn't remove them after refresh
+def clear_outputs():
+    st.session_state.ETL_output = {}
+
+
 def format_string(input_string):
     return input_string.replace('_', ' ').title()
 
@@ -20,6 +25,7 @@ def delete_file(file_path):
 
 def render_form(config):
     updated_dict = {}
+    
     # Asset UID Section
     updated_dict['asset_uid'] = st.text_input("**Enter KoBo Project ID (asset_uid)**", value='a7Ttgjamsjep2KJxXZ4vbt')
     
@@ -31,23 +37,40 @@ def render_form(config):
     else:
         updated_dict['kobo_server'] = selected_server
     
+    # Initialize attempt counter in session state if it doesn't exist
+    if 'login_counter' not in st.session_state:
+        st.session_state.login_counter = 0
+
+    # Upload Kobo credentials
     uploaded_file = st.file_uploader("**Upload Kobo credentials (YAML file)**", type=["yml", "yaml"])
+    
     if uploaded_file:
         try:
             # Load the YAML data from the uploaded file
             yaml_data = yaml.safe_load(uploaded_file)
             # Check Kobo token format
             valid, message = kobo_tools.check_kobo_credentials_format(yaml_data)
+            
             if valid:
                 updated_dict['kobo_credentials'] = yaml_data.get("kobo_credentials", "")
+                st.session_state.login_counter = 0
+                st.success("Credentials are valid!")
             else:
-                st.image("www/wrong_format_credentials.gif") 
-                st.error(message)
+                st.session_state.login_counter += 1
+                st.warning(message)
+
+                #More than 3 failed attempts
+                if st.session_state.login_counter == 3:
+                    st.image("www/wrong_format_credentials.gif") 
+                    st.warning("You have entered invalid credentials three times. Please check your input.")
+                if st.session_state.login_counter >= 5:
+                    st.image("www/wrong_format_credentials_jp.gif") 
+                    st.error("Invalid credential: check your token format and value on your Kobo personal settings.")
+
         except yaml.YAMLError as e:
             st.error(f"YAML parsing error: {e}")
         except Exception as e:
             st.error(f"Unexpected error: {e}")
-
 
     # Raw Data Columns Section (in an expander with name and type in two columns)
     name_mapping = {
