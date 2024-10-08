@@ -19,4 +19,4 @@ kobo_credentials: ${globals:kobo_credentials}
 # Dask Cluster Params
 dask_nb_worker: 10
 dask_nb_thread_per_worker: 1
-dask_dashboard_url: http://127.0.0.1:8787
+dask_dashboard_url: http://localhost:8787

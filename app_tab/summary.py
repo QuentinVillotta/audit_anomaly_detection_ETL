@@ -1,11 +1,11 @@
 import streamlit as st
 import pandas as pd
 from app_utils import plot_tools as pt
+import plotly.express as px
 
 def display():
      df = st.session_state.ETL_output['features_prediction_score']
      sub_tab1, sub_tab2 = st.tabs(["General", "Enumerator"])
- 
      with sub_tab1:
           col1, col2 = st.columns([1, 5])
           with col1:

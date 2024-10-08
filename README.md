@@ -38,7 +38,7 @@ docker pull qvillo/audit_anomaly_detection_app
 
 After pulling the image, you can run the application using Docker. Simply run:
 ```bash
-docker run -p 8501:8501 qvillo/audit_anomaly_detection_app
+docker run -p 8501:8501 -p 8787:8787 qvillo/audit_anomaly_detection_app
 ```
 
 ## Access the Application

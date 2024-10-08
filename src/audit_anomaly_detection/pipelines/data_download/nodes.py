@@ -105,9 +105,11 @@ def extract_audit_files(
     kobo_credentials: str,
     dask_nb_worker: int = 10,
     dask_nb_thread_per_worker: int = 1,
-    dask_dashboard_url: str = "http://127.0.0.1:8787"
+    dask_dashboard_url: str = "http://localhost:8787"
 )-> None:
-    cluster = LocalCluster(n_workers = dask_nb_worker, threads_per_worker = dask_nb_thread_per_worker)
+    cluster = LocalCluster(n_workers = dask_nb_worker,
+                           threads_per_worker = dask_nb_thread_per_worker,
+                           dashboard_address="0.0.0.0:8787")
     # Display Dask Dashboard in the app
     st.info("Downloading audit files ...")
     components.iframe(src=dask_dashboard_url, height=500)

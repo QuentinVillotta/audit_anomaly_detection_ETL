@@ -12,6 +12,7 @@ RUN git clone https://github.com/QuentinVillotta/audit_anomaly_detection_ETL.git
 RUN pip3 install -r requirements.txt
 
 EXPOSE 8501
+EXPOSE 8787
 
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
 

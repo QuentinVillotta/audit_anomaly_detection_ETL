@@ -16,6 +16,7 @@ def make_subheader(_str, font_style="monospace", font_size=18):
     subheader = f"<p style='font-family: {font_style}; color: white; font-size: {font_size}px;'>{_str}</p>"
     st.markdown(subheader, unsafe_allow_html=True)
     
+
 def define_binning(df, X, variable_types):
     if variable_types[X] == 'continuous':
         bin_size, bin_width = freedman_diaconis_rule(df[X])
@@ -33,7 +34,6 @@ def define_binning(df, X, variable_types):
                 size=bin_size     
             )  
     return bins
-
 
 def classify_variable_types(df, threshold=20):
     """
@@ -87,7 +87,6 @@ def load_variable_attribute(var_name, var_attribute):
     return mapping
 
 # Summary tab
-@st.fragment
 def pie_chart_pct_anomalies(df):
     # 1. General indicator - % of detected anomalies
     total_surveys = len(df)
@@ -97,12 +96,12 @@ def pie_chart_pct_anomalies(df):
     "Type": ["Anomaly", "No Anomaly"],
     "Count": [total_anomalies, total_surveys - total_anomalies]
     })
-    fig_pie = px.pie(pie_data, values='Count', names='Type', title="Percentage of detected anomalies")
+    fig_pie = px.pie(pie_data, values='Count', names='Type', title="Percentage of detected anomalies",
+                     labels={'Type': 'Anomaly status'})
     # Display the pie chart
     return fig_pie
 
 
-@st.fragment
 def plot_anomaly_count(df):
     # Group the dataframe and count occurrences of anomaly prediction by enumerator
     survey_count = df.groupby(['enum_id', 'anomaly_prediction']).size().unstack(fill_value=0)
@@ -125,6 +124,8 @@ def plot_anomaly_count(df):
 
     # Display the Plotly chart in Streamlit
     return fig, survey_count_long
+
+
 
 # Univariate Analysis
 @st.fragment
@@ -154,6 +155,7 @@ def univariate_plotting(df, X, hue, variable_types, x_label=None) -> None:
 
 @st.fragment
 def univariate_plotting_interactive(df, X, hue, variable_types, x_label=None):
+    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.2, 0.8])
 
     if hue:
         unique_categories = df[hue].unique()
@@ -162,8 +164,21 @@ def univariate_plotting_interactive(df, X, hue, variable_types, x_label=None):
         unique_categories = [None]  
         colors = ['#636EFA']  
 
-    fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.2, 0.8])
-    bins = define_binning(df, X, variable_types)
+    if variable_types[X] == 'continuous':
+        bin_size, bin_width = freedman_diaconis_rule(df[X])
+        bin_size = bin_width if bin_width > 0 else (df[X].max() - df[X].min())/20
+        bin_start = df[X].min()
+        bin_end = df[X].max()
+    else:
+        bin_size = 1  
+        bin_start = df[X].min()-0.5
+        bin_end = df[X].max()+0.5
+        
+    bins = dict(
+                start=bin_start,  
+                end=bin_end,      
+                size=bin_size     
+            )  
 
     for i, category in enumerate(unique_categories):
         if hue:

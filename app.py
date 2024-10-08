@@ -1,11 +1,9 @@
 import streamlit as st
-import yaml
 import os
 from app_utils import data_io
 from app_utils import plot_tools as pt
 from app_tab import welcome, summary, visualisation, interpretation, run_anomaly_detection
-
-import pickle
+from PIL import Image
 import logging
 
 # Set Logging Level
@@ -43,21 +41,21 @@ if "variable_meaning" not in st.session_state:
 
 if 'ETL_output' not in st.session_state:
     st.session_state.ETL_output = {}
-    if os.path.exists(MODEL_OUTPUT_PATH):
-        with open(MODEL_OUTPUT_PATH, 'rb') as pickle_file:
-            ETL_output = pickle.load(pickle_file)
-        st.session_state.ETL_output = ETL_output
+    # if os.path.exists(MODEL_OUTPUT_PATH):
+    #     with open(MODEL_OUTPUT_PATH, 'rb') as pickle_file:
+    #         ETL_output = pickle.load(pickle_file)
+    #     st.session_state.ETL_output = ETL_output
+
+# Load the logo
+logo_path = "www/IMPACT_Logo.png"  # Replace with the correct path to your logo
+# logo = Image.open(logo_path)
+st.logo(logo_path, size="large", icon_image=logo_path)
+
 
 st.title("Anomaly Detection")
 # Menu/Tabs app
 list_tab = ["Welcome", "Run Anomaly Detection", "Summary", "Interpretation", "Visualization"]
 welcome_tab, run__anomaly_detection_tab, summary_tab,  interpretation_tab, visualization_tab= st.tabs(list_tab)
-
-
-# if st.session_state.click_count == 0:  
-#     data_io.delete_file(MODEL_OUTPUT_PATH)
-#     data_io.delete_file(PREDICTION_PATH)
-
 
 with welcome_tab:
     welcome.display()
@@ -77,15 +75,15 @@ if st.session_state.ETL_output:
 else:
     with summary_tab:
         st.write("No data available.  \
-                 Please run the Anomaly Detection analysis on the welcome page or  \
-                 import new results.")
+                 Please run the anomaly detection pipeline or  \
+                 import previous results on the **Run Anomaly Detection** page")
     with interpretation_tab:
         st.write("No data available.  \
-                 Please run the Anomaly Detection analysis on the welcome page or  \
-                 import new results.")
+                 Please run the anomaly detection pipeline or  \
+                 import previous results on the **Run Anomaly Detection** page")
     with visualization_tab:
         st.write("No data available.  \
-                 Please run the Anomaly Detection analysis on the welcome page or  \
-                 import new results.")
+                 Please run the anomaly detection pipeline or  \
+                 import previous results on the **Run Anomaly Detection** page")
     
 
