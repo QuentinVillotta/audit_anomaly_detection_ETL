@@ -26,9 +26,12 @@ MODEL_OUTPUT_PATH = os.path.join("data", "05_model_output", "output_model.pkl")
 PREDICTION_PATH = os.path.join("data", "05_model_output", "raw_features_predictions_and_scores.xlsx")
 
 # Init counter click button
-if 'click_count' not in st.session_state:
-    st.session_state.click_count = 0
-    
+if 'run_pipeline_counter' not in st.session_state:
+    st.session_state.run_pipeline_counter = 0
+
+if 'login_counter' not in st.session_state:
+        st.session_state.login_counter = 0
+
 if 'variable_names_excel' not in st.session_state:
     st.session_state['variable_names_excel'] = os.path.join("conf", "base", 
                                                             "variable_map_explanation.xlsx")

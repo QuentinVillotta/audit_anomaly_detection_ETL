@@ -1,11 +1,13 @@
 import requests
 import re
 import pandas as pd
+import streamlit as st
 
 def HTTP_check_kobo_api(url, credentials):
     headers = {
         "Authorization": f"{credentials}"
     }
+    url = f"{url}&limit=1"
     try:
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
@@ -60,15 +62,13 @@ def check_kobo_columns(url, raw_data_columns, credentials):
     try:
         response = requests.get(url_metadata, headers=headers)
         response.raise_for_status()  # Check if the request was successful
-        data = response.json()['results']
-       
+        data = response.json()['results']       
     except requests.exceptions.RequestException as e:
         return "Error", f"Failed to download Kobo data: {e}"
         
     # Step 2: Extract the 'survey' fields and convert them into a DataFrame
     try:
         columns = pd.DataFrame(data).columns
-        print(columns)
     except KeyError:
         return "Error", "Unexpected format in the Kobo data response."
 

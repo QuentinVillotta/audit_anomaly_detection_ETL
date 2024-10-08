@@ -36,10 +36,6 @@ def render_form(config):
         updated_dict['kobo_server'] = st.text_input("Enter custom KoBo server host:", value="")
     else:
         updated_dict['kobo_server'] = selected_server
-    
-    # Initialize attempt counter in session state if it doesn't exist
-    if 'login_counter' not in st.session_state:
-        st.session_state.login_counter = 0
 
     # Upload Kobo credentials
     uploaded_file = st.file_uploader("**Upload Kobo credentials (YAML file)**", type=["yml", "yaml"])

@@ -13,7 +13,7 @@ import altair as alt
 
 
 def make_subheader(_str, font_style="monospace", font_size=18):
-    subheader = f"<p style='font-family: {font_style}; color: white; font-size: {font_size}px;'>{_str}</p>"
+    subheader = f"<p style='font-family: {font_style}; font-size: {font_size}px;'>{_str}</p>"
     st.markdown(subheader, unsafe_allow_html=True)
     
 
