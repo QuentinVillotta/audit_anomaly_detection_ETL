@@ -154,7 +154,7 @@ def univariate_plotting(df, X, hue, variable_types, x_label=None) -> None:
     return fig
 
 @st.fragment
-def univariate_plotting_interactive(df, X, hue, variable_types, x_label=None):
+def univariate_plotting_interactive(df, X, hue, variable_types, x_label=None, survey_id=None):
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.2, 0.8])
 
     if hue:
@@ -209,6 +209,19 @@ def univariate_plotting_interactive(df, X, hue, variable_types, x_label=None):
                                   xbins=bins)
         fig.add_trace(hist_trace, row=2, col=1)
 
+    if survey_id and survey_id in df['audit_id'].values:
+        survey_value = df.loc[df['audit_id'] == survey_id, X].values[0]
+        highlight_trace = go.Scatter(
+            x=[survey_value],
+            y=[-1],  
+            mode='markers',
+            marker=dict(color='red', size=12, symbol='x-dot'),
+            name=f"SurveyID value",
+            legendgroup="highlight",
+            showlegend=True
+        )
+        fig.add_trace(highlight_trace, row=1, col=1)
+
     fig.update_layout(
         height=800, width=600,   
         barmode='group' if variable_types[X] == 'discrete' else 'overlay', 
@@ -235,7 +248,6 @@ def univariate_plotting_interactive(df, X, hue, variable_types, x_label=None):
 
 
 # Bivariate Analysis 
-
 @st.fragment
 def kernel_density_plot(df, X, Y, hue, x_label=None, y_label=None) -> None:
     """
@@ -500,20 +512,14 @@ def id_survey_shap_bar_plot_interactive(survey_id_var, selected_survey, data, sh
     st.altair_chart(chart, use_container_width=True)
 
 def generate_palette_colors(num_colors):
-        """Generate a list of random hex colors."""
-        colors_array = np.random.randint(0, 256, size=(num_colors, 3))
-        palette = ["#{:02x}{:02x}{:02x}".format(r, g, b) for r, g, b in colors_array]
-        return palette
+    """Generate a list of random hex colors."""
+    colors_array = np.random.randint(0, 256, size=(num_colors, 3))
+    palette = ["#{:02x}{:02x}{:02x}".format(r, g, b) for r, g, b in colors_array]
+    return palette
 
 @st.fragment
 def univariate_plotting_interactive_enum(df, X, hue, variable_types, x_label=None):
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.2, 0.8])
-
-    def generate_palette_colors(num_colors):
-        """Generate a list of random hex colors."""
-        colors_array = np.random.randint(0, 256, size=(num_colors, 3))
-        palette = ["#{:02x}{:02x}{:02x}".format(r, g, b) for r, g, b in colors_array]
-        return palette
 
     if hue:
         unique_categories = df[hue].unique()
@@ -587,17 +593,12 @@ def univariate_plotting_interactive_enum(df, X, hue, variable_types, x_label=Non
 
     st.plotly_chart(fig, use_container_width=True)
 
-@st.fragment
-def univariate_plotting_interactive_enum_anomaly(df, X, hue, variable_types, x_label=None):
+def univariate_plotting_interactive_enum_anomaly(df, X, hue, variable_types, selected_enums=None, x_label=None):
     
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.2, 0.8])
     bins = define_binning(df, X, variable_types)
 
     unique_enums = df['enum_id'].unique()
-    selected_enums = st.multiselect("Select Enumerator(s):", unique_enums, key="enum_filter", 
-                                    default = unique_enums[0] if len(unique_enums) > 0 else st.error("No Enumerators"),
-                                    placeholder="Enumerator ID(s)")
-
     filtered_df = df[df['enum_id'].isin(selected_enums)] if selected_enums else df
 
     if 'enum_color_map' not in st.session_state:
@@ -651,7 +652,7 @@ def univariate_plotting_interactive_enum_anomaly(df, X, hue, variable_types, x_l
         height=800, width=600,   
         barmode='group' if variable_types[X] == 'discrete' else 'overlay', 
         title=f'Univariate Plot for {x_label}<br>filtered by Enumerator ID: {", ".join(selected_enums)}<br>' + 
-                        ('grouped by Anomaly Prediction' if hue == "anomaly_prediction" else ''),
+              ('grouped by Anomaly Prediction' if hue == "anomaly_prediction" else ''),
         title_x=0.3, legend=dict(title=hue))
 
     fig.update_xaxes(title_text=x_label if x_label else X, row=2, col=1)

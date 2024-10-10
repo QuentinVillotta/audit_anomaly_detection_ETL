@@ -3,6 +3,8 @@ from app_utils import plot_tools as pt
 
 # Params
 THRESHOLD_QUANTITATIVE_TYPE = 20
+SURVEY_ID_VAR = 'audit_id'
+ENUMERATOR_ID_VAR = 'enum_id'
 
 def display():
     if "variable_mapping" not in st.session_state:
@@ -27,21 +29,32 @@ def display():
     with sub_tab1:
         col1, col2 = st.columns([1, 5])
         with col1:
+
             variable_enum = st.selectbox("Choose a variable:", filtered_labels_list, index=None, 
-                                         key="enum_variable")
+                                        key="enum_variable")
 
             hue_enum_label = st.selectbox("Choose a grouping variable:", labels_hue, 
-                                          key="HUE_enum", index=0)
+                                        key="HUE_enum", index=0)
             hue_enum = reverse_hue_mapping[hue_enum_label] 
             if hue_enum == "":
                 hue_enum = None
 
         with col2:
+            
+            unique_enums = st.session_state.ETL_output['features_prediction_score'][ENUMERATOR_ID_VAR].unique()
+            selected_enums = st.multiselect("Select Enumerator(s):", unique_enums, key="enum_second_filter", 
+                                            #default=unique_enums[0] if len(unique_enums) > 0 else st.error("No Enumerators"),
+                                            placeholder="Enumerator ID(s)")
+
             if variable_enum:
                 variable_name_enum = filtered_features_list[filtered_labels_list.index(variable_enum)]
                 pt.univariate_plotting_interactive_enum_anomaly(df=predic_data, X=variable_name_enum, 
                                                                 hue=hue_enum, variable_types=variable_types, 
-                                                                x_label=variable_enum)
+                                                                x_label=variable_enum, 
+                                                                selected_enums=selected_enums
+                                                                )
+
+                
     with sub_tab2:
         col1, col2 = st.columns([1, 5])
         with col1:
@@ -51,9 +64,28 @@ def display():
             if hue_univariate == "":
                 hue_univariate = None
         with col2:
+            
+            if len(selected_enums) > 0:  
+                available_survey_ids = st.session_state.ETL_output['features_prediction_score'].loc[
+                    st.session_state.ETL_output['features_prediction_score'][ENUMERATOR_ID_VAR].isin(selected_enums), 
+                    SURVEY_ID_VAR].unique()
+            else:
+                available_survey_ids = []
+
+            if len(available_survey_ids) > 0:
+                survey_id_input = st.selectbox("Select Survey ID to highlight:", available_survey_ids, 
+                                            key="survey_id", index=None,
+                                            placeholder="Survey ID")
+            else:
+                st.warning("No surveys available.")
+                survey_id_input = None
+
             if variable:
                 variable_name = filtered_features_list[filtered_labels_list.index(variable)]
-                pt.univariate_plotting_interactive(df=predic_data, X=variable_name, hue=hue_univariate, variable_types=variable_types, x_label=variable)
+                pt.univariate_plotting_interactive(df=predic_data, X=variable_name, 
+                                                   hue=hue_univariate, variable_types=variable_types, 
+                                                   x_label=variable, 
+                                                   survey_id=survey_id_input)
 
     with sub_tab3:
         col1, col2 = st.columns([1, 5])

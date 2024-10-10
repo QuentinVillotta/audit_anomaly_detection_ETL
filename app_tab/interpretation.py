@@ -11,7 +11,7 @@ SURVEY_ID_VAR = 'audit_id'
 ENUMERATOR_ID_VAR = 'enum_id'
 
 def display():
-    sub_tab1, sub_tab2 = st.tabs(["Local Interpretation", "Global Interpretation"])
+    sub_tab1, sub_tab2, sub_tab3 = st.tabs(["Local Interpretation", "Global Interpretation", "Enumerator No Anomalies"])
 
     if "variable_meaning" not in st.session_state:
         st.error("Failed to load variable mapping.")
@@ -32,7 +32,6 @@ def display():
             all_enumerators = predic_data[ENUMERATOR_ID_VAR].unique()
             enumerators_with_anomalies = predic_data[predic_data.anomaly_prediction == 1][ENUMERATOR_ID_VAR].unique()
             enumerators_without_anomalies = np.setdiff1d(all_enumerators, enumerators_with_anomalies)
-            pt.make_subheader(f"Enumerators without anomalies: {', '.join(map(str, enumerators_without_anomalies))}")
 
             col1, col2 = st.columns([1, 3])
 
@@ -84,3 +83,7 @@ def display():
             fig, ax = plt.subplots()
             shap.plots.bar(shap_values, max_display=nb_features, show=False, ax=ax)
             st.pyplot(fig)
+
+        with sub_tab3:
+            pt.make_subheader(f"Enumerators without anomalies: {', '.join(map(str, enumerators_without_anomalies))}")
+
