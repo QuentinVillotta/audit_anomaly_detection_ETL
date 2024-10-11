@@ -482,6 +482,7 @@ def id_survey_shap_bar_plot_interactive(survey_id_var, selected_survey, data, sh
          
     #nb_features = shap_values.data.shape[1]
     index_survey = data[data[survey_id_var] == selected_survey].index[0]
+    feature_data = data[data[survey_id_var] == selected_survey]
     shap_index_survey = data.index.get_loc(index_survey)
     
     shap_values_data = shap_values[shap_index_survey].values
@@ -510,6 +511,66 @@ def id_survey_shap_bar_plot_interactive(survey_id_var, selected_survey, data, sh
     display_top_negative_shap_values(shap_index_survey, shap_values, 
                                      data.drop(columns=[survey_id_var]), ntop=5)
     st.altair_chart(chart, use_container_width=True)
+
+
+@st.fragment
+def id_survey_shap_bar_plot_interactive2(survey_id_var, selected_survey, data, shap_values) -> None:
+    
+    def display_top_negative_shap_values2(selected_index, shap_values, data, ntop=5) -> None:
+            features = data.drop(columns=[survey_id_var])
+            feature_data = data[data[survey_id_var] == selected_survey]
+            survey_shap_values = shap_values[selected_index].values  
+            shap_series = pd.Series(survey_shap_values, index=features.columns)
+
+            negative_shap_df = shap_series[shap_series < 0].nsmallest(ntop)
+            
+            st.subheader("Top Features Anomaly Detection", divider="gray")
+            st.write("The following variable contributed the most to flag the selected \
+                    survey as an anomaly")
+
+            for feature, shap_value in negative_shap_df.items():
+                feature_label = st.session_state.variable_mapping.get(feature, feature)
+                feature_comment = st.session_state.variable_meaning.get(feature, "No comment available.")
+                feature_value = feature_data[feature].values[0]
+                full_string = f"- **{feature_label} = {feature_value:.0f}** \
+                              (**SHAP value = {shap_value:.2f}**) \
+                              {feature_comment} is below/above its average \
+                              **({int(data[feature].mean())})**."
+                st.markdown(full_string)
+            st.markdown("<hr style='height:2px; background-color: gray; border: none;' />", 
+                        unsafe_allow_html=True)
+      
+         
+    #nb_features = shap_values.data.shape[1]
+    index_survey = data[data[survey_id_var] == selected_survey].index[0]
+    shap_index_survey = data.index.get_loc(index_survey)
+    
+    shap_values_data = shap_values[shap_index_survey].values
+    feature_names = data.drop(columns=[survey_id_var]).columns
+    
+    feature_label = [st.session_state.variable_mapping.get(feature, feature) for feature in feature_names]
+    
+    shap_df = pd.DataFrame({
+        'Feature': feature_label,
+        'SHAP Value': shap_values_data
+    }).sort_values(by='SHAP Value', ascending=True)
+
+    chart = alt.Chart(shap_df).mark_bar().encode(
+        y=alt.Y('Feature:N', sort=None, axis=alt.Axis(labelFontSize=14, labelAngle=0)),  
+        x='SHAP Value:Q',
+        tooltip=['Feature', 'SHAP Value']
+    ).properties(
+        title=f'SHAP Values for Survey ID: {selected_survey}',
+        width=1200,
+        height=800
+    ).configure_mark(
+        opacity=0.8,
+        color='skyblue'
+    )
+
+    display_top_negative_shap_values2(shap_index_survey, shap_values, data, ntop=5)
+    st.altair_chart(chart, use_container_width=True)    
+
 
 def generate_palette_colors(num_colors):
     """Generate a list of random hex colors."""

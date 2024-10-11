@@ -27,11 +27,11 @@ def display():
         features_label = interpretation_data['features']
         features = interpretation_data['features'].iloc[:, 1:]
 
-        with sub_tab1:
+        all_enumerators = predic_data[ENUMERATOR_ID_VAR].unique()
+        enumerators_with_anomalies = predic_data[predic_data.anomaly_prediction == 1][ENUMERATOR_ID_VAR].unique()
+        enumerators_without_anomalies = np.setdiff1d(all_enumerators, enumerators_with_anomalies)
 
-            all_enumerators = predic_data[ENUMERATOR_ID_VAR].unique()
-            enumerators_with_anomalies = predic_data[predic_data.anomaly_prediction == 1][ENUMERATOR_ID_VAR].unique()
-            enumerators_without_anomalies = np.setdiff1d(all_enumerators, enumerators_with_anomalies)
+        with sub_tab1:
 
             col1, col2 = st.columns([1, 3])
 
@@ -74,7 +74,7 @@ def display():
 
                 sub_sub2_tab1, sub_sub2_tab2 = st.tabs(["Feature Importance", "Force Plot"])
                 with sub_sub2_tab1:
-                    pt.id_survey_shap_bar_plot_interactive(SURVEY_ID_VAR, selected_survey, features_label, shap_values)
+                    pt.id_survey_shap_bar_plot_interactive2(SURVEY_ID_VAR, selected_survey, features_label, shap_values)
                 with sub_sub2_tab2:
                     pt.id_survey_shap_force_plot(survey_id_var=SURVEY_ID_VAR, selected_survey=selected_survey, data=features_label, shap_values=shap_values)
 

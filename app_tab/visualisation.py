@@ -64,11 +64,15 @@ def display():
             if hue_univariate == "":
                 hue_univariate = None
         with col2:
-            
+
             if len(selected_enums) > 0:  
-                available_survey_ids = st.session_state.ETL_output['features_prediction_score'].loc[
-                    st.session_state.ETL_output['features_prediction_score'][ENUMERATOR_ID_VAR].isin(selected_enums), 
-                    SURVEY_ID_VAR].unique()
+                #available_survey_ids = st.session_state.ETL_output['features_prediction_score'].loc[
+                #    st.session_state.ETL_output['features_prediction_score'][ENUMERATOR_ID_VAR].isin(selected_enums), 
+                #    SURVEY_ID_VAR].unique()
+
+                #Display only anomaly surveys
+                available_survey_ids = predic_data[(predic_data.anomaly_prediction == 1) & 
+                                            (predic_data[ENUMERATOR_ID_VAR].isin(selected_enums))][SURVEY_ID_VAR].unique()
             else:
                 available_survey_ids = []
 
@@ -77,7 +81,9 @@ def display():
                                             key="survey_id", index=None,
                                             placeholder="Survey ID")
             else:
-                st.warning("No surveys available.")
+                st.warning("No surveys available. Please select an enumerator with flagged surveys in the previous tab. \
+                            It allows to display the selected feature values and the available surveys \
+                            for a given enumerator.")
                 survey_id_input = None
 
             if variable:
