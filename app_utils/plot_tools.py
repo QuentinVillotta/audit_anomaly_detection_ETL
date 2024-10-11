@@ -86,11 +86,11 @@ def load_variable_attribute(var_name, var_attribute):
         
     return mapping
 
-def define_anomaly_color() -> dict:
+def define_anomaly_color(key_anom, key_not_anom) -> dict:
     if 'anomaly_color' not in st.session_state:
         st.error("Please define anomaly color map")
-    dict_color = {'Anomaly': st.session_state.anomaly_color[0],  
-                   'No Anomaly': st.session_state.anomaly_color[1]}
+    dict_color = {key_anom: st.session_state.anomaly_color[0],  
+                   key_not_anom: st.session_state.anomaly_color[1]}
     return dict_color
 # Summary tab
 def pie_chart_pct_anomalies(df):
@@ -102,7 +102,7 @@ def pie_chart_pct_anomalies(df):
     "Type": ["Anomaly", "No Anomaly"],
     "Count": [total_anomalies, total_surveys - total_anomalies]
     })
-    anom_colors = define_anomaly_color()
+    anom_colors = define_anomaly_color("Anomaly", "No Anomaly")
 
     fig_pie = px.pie(pie_data, values='Count', names='Type', title="Percentage of detected anomalies",
                      labels={'Type': 'Anomaly status'}, 
@@ -122,7 +122,7 @@ def plot_anomaly_count(df):
     # Convert from wide to long format to make it compatible with Plotly
     survey_count_long = survey_count.melt(id_vars='enum_id', value_vars=['No Anomaly', 'Anomaly'], 
                                           var_name='Anomaly Type', value_name='Count')
-    anom_colors = define_anomaly_color()
+    anom_colors = define_anomaly_color("Anomaly", "No Anomaly")
     
     # Create a Plotly bar chart
     fig = px.bar(survey_count_long, x='enum_id', y='Count', color='Anomaly Type', barmode='group',
@@ -281,21 +281,30 @@ def kernel_density_plot(df, X, Y, hue, x_label=None, y_label=None) -> None:
     Returns:
     - None: Displays a plot using Streamlit.
     """
+    anom_colors = define_anomaly_color(1, 0)
+
     # If hue is None, plot without grouping by color
     if hue is None:
-        fig = px.density_contour(df, x=X, y=Y,  marginal_x="violin", marginal_y="violin")
+        fig = px.density_contour(df, x=X, y=Y, marginal_x="violin", marginal_y="violin")
         
+    elif hue == "anomaly_prediction":
+        fig = px.density_contour(
+            df, 
+            x=X, 
+            y=Y, 
+            color=hue, 
+            marginal_x="violin", 
+            marginal_y="violin", 
+            color_discrete_map=anom_colors#{0: st.session_state.anomaly_color[1], 1: st.session_state.anomaly_color[0]}
+        )
     else:
         fig = px.density_contour(df, x=X, y=Y, color=hue, marginal_x="violin", marginal_y="violin")
-    
-    # Add rug plot
-    # fig.add_trace(px.rug(df, x=X, y=Y).data[0])
-    
+
     # Set axis labels if provided
     if x_label:
         fig.update_layout(xaxis_title=x_label, yaxis_title=y_label)
 
-    fig.update_layout(height=1200, width=900)
+    fig.update_layout(height=600, width=1000)
     # Render the plot using Plotly
     return fig
 
@@ -325,7 +334,11 @@ def avg_catplot_multicat(df, X, Y, hue, variable_types, x_label=None, y_label=No
         stderr = stats.sem(series)  # Standard error
         h = stderr * stats.t.ppf((1 + confidence) / 2, n - 1)  # Confidence interval
         return mean, h
-        
+    
+    anom_colors = define_anomaly_color(1, 0)
+    #st.write(anom_colors)
+    #pilot = {str(key): color for key, color in anom_colors.items()}
+    #st.write(pilot)
     # Check if the X variable is discrete or continuous
     if variable_types[X] == 'discrete':     
         if hue is None:
@@ -340,8 +353,8 @@ def avg_catplot_multicat(df, X, Y, hue, variable_types, x_label=None, y_label=No
                 'ci': compute_ci(group[Y])[1]
             })).reset_index()
             df_grouped[hue] = df_grouped[hue].astype(str)
-            fig = px.bar(df_grouped, x=X, y='mean', color=hue, barmode='group', error_y='ci')
-    
+            fig = px.bar(df_grouped, x=X, y='mean', color=hue, barmode='group', error_y='ci',
+                         color_discrete_map={str(key): color for key, color in anom_colors.items()})
     else:
         # Use Freedman-Diaconis rule for binning and convert intervals to strings
         num_bins, _ = freedman_diaconis_rule(df[X])
@@ -359,7 +372,7 @@ def avg_catplot_multicat(df, X, Y, hue, variable_types, x_label=None, y_label=No
                 'ci': compute_ci(group[Y])[1]
             })).reset_index()
             df_grouped[hue] = df_grouped[hue].astype(str)
-
+        
         # Ensure the intervals are ordered correctly
         df_grouped = df_grouped.sort_values(by='quantitative_var_binned', key=lambda x: x.cat.codes)
         # Convert intervals to string after sorting
@@ -367,15 +380,18 @@ def avg_catplot_multicat(df, X, Y, hue, variable_types, x_label=None, y_label=No
 
         # Plot using Plotly
         if hue is None:
-            fig = px.bar(df_grouped, x='quantitative_var_binned', y='mean', barmode='group', error_y='ci')
+            fig = px.bar(df_grouped, x='quantitative_var_binned', y='mean', 
+                         barmode='group', error_y='ci')
         else:
-            fig = px.bar(df_grouped, x='quantitative_var_binned', y='mean', color=hue, barmode='group', error_y='ci')
+            fig = px.bar(
+                    df_grouped, x='quantitative_var_binned', y='mean', color=hue, 
+                    barmode='group', error_y='ci',
+                    color_discrete_map={str(key): color for key, color in anom_colors.items()})
 
     # Set axis labels if provided
     if x_label:
         fig.update_layout(xaxis_title=x_label, yaxis_title=f'Mean of {y_label}')
-    fig.update_layout(height=1200, width=900)
-
+    fig.update_layout(height=800, width=1000)
     # Render the Plotly chart
     return fig
 
@@ -406,7 +422,6 @@ def density_heatmap(df, X, Y, hue, x_label=None, y_label=None) -> None:
     if x_label:
         fig.update_layout(xaxis_title=x_label, yaxis_title=y_label)
 
-    fig.update_layout(height=1200, width=900)
     # Render the Plotly chart
     return fig
 
@@ -552,8 +567,8 @@ def id_survey_shap_bar_plot_interactive2(survey_id_var, selected_survey, data, s
                 feature_value = feature_data[feature].values[0]
                 full_string = f"- **{feature_label} = {feature_value:.0f}** \
                               (**SHAP value = {shap_value:.2f}**) \
-                              {feature_comment} is below/above its average \
-                              **({int(data[feature].mean())})**."
+                              {feature_comment}: is below/above its average \
+                              **\u03BC = {int(data[feature].mean())} +/- {int(data[feature].std())}**."
                 st.markdown(full_string)
             st.markdown("<hr style='height:2px; background-color: gray; border: none;' />", 
                         unsafe_allow_html=True)
@@ -672,8 +687,8 @@ def univariate_plotting_interactive_enum(df, X, hue, variable_types, x_label=Non
 
     st.plotly_chart(fig, use_container_width=True)
 
+@st.fragment
 def univariate_plotting_interactive_enum_anomaly(df, X, hue, variable_types, selected_enums=None, x_label=None):
-    
     fig = make_subplots(rows=2, cols=1, shared_xaxes=True, row_heights=[0.2, 0.8])
     bins = define_binning(df, X, variable_types)
 
@@ -682,25 +697,26 @@ def univariate_plotting_interactive_enum_anomaly(df, X, hue, variable_types, sel
 
     if 'enum_color_map' not in st.session_state:
         st.session_state.enum_color_map = {enum: color for enum, color in zip(unique_enums, generate_palette_colors(len(unique_enums)))}
-    
+    #st.write(len(unique_enums))
     if 'anomaly_color' not in st.session_state:
         st.error("Please define anomaly color map")
     
     if selected_enums:
         st.write("Descriptive Statistics for Selected Enumerators:")
-        st.dataframe(filtered_df.groupby(filtered_df['enum_id'])[X].describe())
-        colors = [st.session_state.enum_color_map[enum] for enum in selected_enums]
-    else:
-        colors = [st.session_state.anomaly_color[0], st.session_state.anomaly_color[1]]
+        df_display = filtered_df.groupby(filtered_df['enum_id'])[X].describe()
+        st.dataframe(df_display, height=200 if len(selected_enums) > 5 else len(selected_enums)*48)
+
+    colors = [st.session_state.enum_color_map.get(enum) for enum in unique_enums] if selected_enums else []
+    #colors = [st.session_state.enum_color_map[enum] for enum in selected_enums]
+    #st.write(len(colors))
 
     if hue == "anomaly_prediction":
-        colors = st.session_state.anomaly_color  
         unique_categories = filtered_df[hue].unique()
         mapped_categories = ["No Anomaly" if x == 0 else "Anomaly" for x in unique_categories]
         selected_categories = mapped_categories
+        colors = st.session_state.anomaly_color
     else:
         selected_categories = selected_enums
-        colors = [st.session_state.enum_color_map[enum] for enum in selected_enums]
 
     for i, category in enumerate(selected_categories):
         if hue == "anomaly_prediction":
@@ -708,9 +724,7 @@ def univariate_plotting_interactive_enum_anomaly(df, X, hue, variable_types, sel
             color = colors[0] if category == "Anomaly" else colors[1]
         else:
             subset = filtered_df[filtered_df['enum_id'] == category]
-            color = colors[i] if len(colors) > i else st.session_state.enum_color_map[unique_enums[0]]  # Enumerator color
-            #color = colors[i] if len(colors) > i else st.session_state.anomaly_color[1]#"#636EFA"
-        
+            color = colors[i] if len(colors) > 1 else st.session_state.enum_color_map.get(unique_enums[0], '#636EFA')
         box_trace = go.Box(
             x=subset[X], 
             name=str(category), 
@@ -739,7 +753,8 @@ def univariate_plotting_interactive_enum_anomaly(df, X, hue, variable_types, sel
         barmode='group' if variable_types[X] == 'discrete' else 'overlay', 
         title=f'Univariate Plot for {x_label}<br>filtered by Enumerator ID: {", ".join(selected_enums)}<br>' + 
               ('grouped by Anomaly Prediction' if hue == "anomaly_prediction" else ''),
-        title_x=0.3, legend=dict(title=hue))
+        title_x=0.3, legend=dict(title=hue)
+    )
 
     fig.update_xaxes(title_text=x_label if x_label else X, row=2, col=1)
     fig.update_yaxes(title_text="Density", row=1, col=1)  
@@ -751,4 +766,5 @@ def univariate_plotting_interactive_enum_anomaly(df, X, hue, variable_types, sel
         tick_text = [str(val) for val in tick_vals]
         fig.update_xaxes(tickvals=tick_vals, ticktext=tick_text, ticks='outside', tickwidth=3, row=2, col=1)
 
-    st.plotly_chart(fig, use_container_width=True)
+    # Use a unique key to avoid duplicate IDs
+    st.plotly_chart(fig, use_container_width=True, key=f"univariate_plot_{x_label}_{'_'.join(selected_enums) if selected_enums else 'all'}")
