@@ -32,6 +32,9 @@ if 'run_pipeline_counter' not in st.session_state:
 if 'login_counter' not in st.session_state:
         st.session_state.login_counter = 0
 
+if 'anomaly_color' not in st.session_state:
+        st.session_state.anomaly_color = ["#FFA500", "#636EFA"]
+
 if 'variable_names_excel' not in st.session_state:
     st.session_state['variable_names_excel'] = os.path.join("conf", "base", 
                                                             "variable_map_explanation.xlsx")
