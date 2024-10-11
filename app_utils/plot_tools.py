@@ -295,7 +295,7 @@ def kernel_density_plot(df, X, Y, hue, x_label=None, y_label=None) -> None:
     if x_label:
         fig.update_layout(xaxis_title=x_label, yaxis_title=y_label)
 
-    fig.update_layout(height=800, width=600)
+    fig.update_layout(height=1200, width=900)
     # Render the plot using Plotly
     return fig
 
@@ -374,7 +374,7 @@ def avg_catplot_multicat(df, X, Y, hue, variable_types, x_label=None, y_label=No
     # Set axis labels if provided
     if x_label:
         fig.update_layout(xaxis_title=x_label, yaxis_title=f'Mean of {y_label}')
-    fig.update_layout(height=800, width=600)
+    fig.update_layout(height=1200, width=900)
 
     # Render the Plotly chart
     return fig
@@ -406,7 +406,7 @@ def density_heatmap(df, X, Y, hue, x_label=None, y_label=None) -> None:
     if x_label:
         fig.update_layout(xaxis_title=x_label, yaxis_title=y_label)
 
-    fig.update_layout(height=800, width=600)
+    fig.update_layout(height=1200, width=900)
     # Render the Plotly chart
     return fig
 
@@ -694,18 +694,22 @@ def univariate_plotting_interactive_enum_anomaly(df, X, hue, variable_types, sel
         colors = [st.session_state.anomaly_color[0], st.session_state.anomaly_color[1]]
 
     if hue == "anomaly_prediction":
+        colors = st.session_state.anomaly_color  
         unique_categories = filtered_df[hue].unique()
-        mapped_categories = ["Not Anomaly" if x == 0 else "Anomaly" for x in unique_categories]
+        mapped_categories = ["No Anomaly" if x == 0 else "Anomaly" for x in unique_categories]
         selected_categories = mapped_categories
     else:
         selected_categories = selected_enums
+        colors = [st.session_state.enum_color_map[enum] for enum in selected_enums]
 
     for i, category in enumerate(selected_categories):
         if hue == "anomaly_prediction":
             subset = filtered_df[filtered_df[hue] == (1 if category == "Anomaly" else 0)]
+            color = colors[0] if category == "Anomaly" else colors[1]
         else:
             subset = filtered_df[filtered_df['enum_id'] == category]
-        color = colors[i] if len(colors) > i else st.session_state.anomaly_color[1]#"#636EFA"
+            color = colors[i] if len(colors) > i else st.session_state.enum_color_map[unique_enums[0]]  # Enumerator color
+            #color = colors[i] if len(colors) > i else st.session_state.anomaly_color[1]#"#636EFA"
         
         box_trace = go.Box(
             x=subset[X], 
