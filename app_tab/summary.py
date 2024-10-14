@@ -9,7 +9,7 @@ def display():
          return
 
      df = st.session_state.ETL_output['features_prediction_score']
-     sub_tab1, sub_tab2 = st.tabs(["General", "Enumerator"])
+     sub_tab1, sub_tab2, sub_tab3 = st.tabs(["General", "Enumerator", "Filtering"])
     
      with sub_tab1:
          col1, col2 = st.columns([2, 5])
@@ -21,8 +21,8 @@ def display():
          with col2:
              df_display = df.copy()
              df_display.rename(index=st.session_state.variable_mapping, columns=st.session_state.variable_mapping, inplace=True)
-             st.dataframe(df_display.set_index(df_display.columns[0]), hide_index=False)
-
+             df_display = df_display.set_index(df_display.columns[0])
+             st.dataframe(df_display, hide_index=False)
 
      with sub_tab2:
           anomaly_count_enum_plot, anomaly_count_enum_df = pt.plot_anomaly_count(df)
@@ -37,3 +37,7 @@ def display():
           new_col_names = {'enum_id': 'Enumerator ID', 'Count': 'Number of surveys', 'Anomaly Type': 'Anomaly status'}
           df_sorted_renamed = df_sorted.rename(columns=new_col_names)
           st.dataframe(df_sorted_renamed, hide_index= True)
+
+     with sub_tab3:
+         df_filter = df_display.reset_index()
+         st.dataframe(pt.filter_dataframe(df_filter), hide_index=True)
