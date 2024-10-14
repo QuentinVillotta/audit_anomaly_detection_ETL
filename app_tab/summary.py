@@ -4,15 +4,25 @@ from app_utils import plot_tools as pt
 import plotly.express as px
 
 def display():
+     if "variable_mapping" not in st.session_state:
+         st.error("Failed to load variable mapping.")
+         return
+
      df = st.session_state.ETL_output['features_prediction_score']
      sub_tab1, sub_tab2 = st.tabs(["General", "Enumerator"])
+    
      with sub_tab1:
-          col1, col2 = st.columns([1, 5])
-          with col1:
-               fig_pie = pt.pie_chart_pct_anomalies(df)
-               st.plotly_chart(fig_pie)
-          with col2:
-               st.dataframe(df.set_index('audit_id'), hide_index= False)
+         col1, col2 = st.columns([2, 5])
+        
+         with col1:
+             fig_pie = pt.pie_chart_pct_anomalies(df)
+             st.plotly_chart(fig_pie)
+        
+         with col2:
+             df_display = df.copy()
+             df_display.rename(index=st.session_state.variable_mapping, columns=st.session_state.variable_mapping, inplace=True)
+             st.dataframe(df_display.set_index(df_display.columns[0]), hide_index=False)
+
 
      with sub_tab2:
           anomaly_count_enum_plot, anomaly_count_enum_df = pt.plot_anomaly_count(df)
