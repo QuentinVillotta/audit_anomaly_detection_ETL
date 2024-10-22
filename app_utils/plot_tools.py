@@ -209,7 +209,8 @@ def plot_anomaly_count(df):
                  color_discrete_map=anom_colors)
 
     # Ensure the x-axis is ordered by the number of anomalies in descending order
-    fig.update_layout(xaxis={'categoryorder':'total descending'})
+    fig.update_layout(height=600, width=1200, 
+                      xaxis={'categoryorder':'total descending'}, title_x=0.4)
 
     # Display the Plotly chart in Streamlit
     return fig, survey_count_long

@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 from app_utils import plot_tools as pt
 import plotly.express as px
 
@@ -25,8 +26,11 @@ def display():
              st.dataframe(pt.filter_dataframe(df_display), hide_index=False)
 
      with sub_tab2:
+          
           anomaly_count_enum_plot, anomaly_count_enum_df = pt.plot_anomaly_count(df)
-          st.plotly_chart(anomaly_count_enum_plot)
+          st.plotly_chart(anomaly_count_enum_plot, use_container_width=True)
+
+          """
           # Sort DF
           anomaly_df = anomaly_count_enum_df[anomaly_count_enum_df['Anomaly Type'] == 'Anomaly']
           # Sort the filtered DataFrame by 'Count' in descending order
@@ -37,4 +41,18 @@ def display():
           new_col_names = {'enum_id': 'Enumerator ID', 'Count': 'Number of surveys', 'Anomaly Type': 'Anomaly status'}
           df_sorted_renamed = df_sorted.rename(columns=new_col_names)
           st.dataframe(df_sorted_renamed, hide_index= True)
+          """
+
+          anomaly_df = anomaly_count_enum_df[anomaly_count_enum_df['Anomaly Type'] == 'Anomaly'][['enum_id', 'Count']]
+          anomaly_df.rename(columns={'Count': '#Anomaly'}, inplace=True)
+          no_anomaly_df = anomaly_count_enum_df[anomaly_count_enum_df['Anomaly Type'] == 'No Anomaly'][['enum_id', 'Count']]
+          no_anomaly_df.rename(columns={'Count': '#Not Anomaly'}, inplace=True)
+
+          merged_df = pd.merge(anomaly_df, no_anomaly_df, on='enum_id', how='outer').sort_values(by='#Anomaly', ascending=False)
+          merged_df["Total Surveys"] = merged_df['#Anomaly'] + merged_df['#Not Anomaly']
+          merged_df["%Flagged Survey"] = np.round(merged_df['#Anomaly']/merged_df["Total Surveys"], 2)
+          merged_df.rename(columns={'enum_id': 'Enumerator ID'}, inplace=True)
+                    
+          #st.dataframe(merged_df, hide_index= True)
+          st.dataframe(pt.filter_dataframe(merged_df), hide_index=True)
 
