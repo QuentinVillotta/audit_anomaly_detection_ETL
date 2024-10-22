@@ -74,13 +74,16 @@ def display():
                 st.dataframe(df_display)
 
                 sub_sub2_tab1, sub_sub2_tab2 = st.tabs(["Feature Importance", "Force Plot"])
+                alt_plt_flag = False
                 with sub_sub2_tab1:
-                    pt.id_survey_shap_bar_plot_interactive(SURVEY_ID_VAR, selected_survey, features_label, shap_values)
+                    pt.id_survey_shap_bar_plot_interactive(SURVEY_ID_VAR, selected_survey, features_label, 
+                                                           shap_values, alt_plot=alt_plt_flag)
                 with sub_sub2_tab2:
-                    pt.id_survey_shap_force_plot(survey_id_var=SURVEY_ID_VAR, selected_survey=selected_survey, data=features_label, shap_values=shap_values)
+                    pt.id_survey_shap_force_plot(survey_id_var=SURVEY_ID_VAR, selected_survey=selected_survey, 
+                                                 data=features_label, shap_values=shap_values)
 
         with sub_tab2:
-            pt.make_global_shap(shap_values, features)
+            pt.make_global_shap(shap_values, features, alt_plot=alt_plt_flag)
 
         with sub_tab3:
             pt.make_subheader(f"Enumerators without anomalies: {', '.join(map(str, enumerators_without_anomalies))}")

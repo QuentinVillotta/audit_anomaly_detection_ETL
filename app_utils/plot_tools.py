@@ -528,49 +528,62 @@ def id_survey_shap_bar_plot(survey_id_var, selected_survey, data, shap_values) -
      st.pyplot(fig)
 
 @st.fragment
-def make_global_shap(shap_values, features):
+def make_global_shap(shap_values, features, alt_plot=False):
     shap_summary = pd.DataFrame({
                 'Feature': features.columns.map(st.session_state.variable_mapping),
                 'SHAP Value': np.abs(shap_values.values).mean(axis=0)
                 })
-
     shap_summary = shap_summary.sort_values(by='SHAP Value', ascending=True)
-    fig = px.bar(shap_summary, x='SHAP Value', y='Feature', orientation='h',
+
+    if alt_plot:
+        chart = alt.Chart(shap_summary).mark_bar(color='skyblue', opacity=0.8).encode(
+                    x=alt.X('SHAP Value:Q', title='SHAP Value'),
+                    y=alt.Y('Feature:N', title='Feature', sort='-x', 
+                            axis=alt.Axis(labelFontSize=16, labelAngle=0)),
+                    tooltip=['Feature:N', 'SHAP Value:Q']
+                ).properties(
+                    title='Global Feature Importance (SHAP Values)',
+                    height=800,
+                    width=1200
+                ).configure_title(
+                    anchor='middle'
+                )
+        st.altair_chart(chart, use_container_width=True)
+    else:
+        fig = px.bar(shap_summary, x='SHAP Value', y='Feature', orientation='h',
                          title='Global Feature Importance (SHAP Values)',
                          labels={'SHAP Value': 'SHAP Value', 'Feature': 'Feature'}, 
                          color_discrete_sequence=['skyblue'], opacity=0.8)
-    fig.update_layout(height=800, width=1200, title_x=0.5)
-    st.plotly_chart(fig, use_container_width=True)
+        fig.update_layout(height=800, width=1200, title_x=0.5, yaxis_tickfont=dict(size=16))
+        st.plotly_chart(fig, use_container_width=True)
 
 @st.fragment
-def id_survey_shap_bar_plot_interactive(survey_id_var, selected_survey, data, shap_values) -> None:
+def id_survey_shap_bar_plot_interactive(survey_id_var, selected_survey, data, shap_values, alt_plot=False) -> None:
     
     def display_top_negative_shap_values(selected_index, shap_values, data, ntop=5) -> None:
-            features = data.drop(columns=[survey_id_var])
-            feature_data = data[data[survey_id_var] == selected_survey]
-            survey_shap_values = shap_values[selected_index].values  
-            shap_series = pd.Series(survey_shap_values, index=features.columns)
+        features = data.drop(columns=[survey_id_var])
+        feature_data = data[data[survey_id_var] == selected_survey]
+        survey_shap_values = shap_values[selected_index].values  
+        shap_series = pd.Series(survey_shap_values, index=features.columns)
 
-            negative_shap_df = shap_series[shap_series < 0].nsmallest(ntop)
-            
-            st.subheader("Top Features Anomaly Detection", divider="gray")
-            st.write("The following variable contributed the most to flag the selected \
-                    survey as an anomaly")
+        negative_shap_df = shap_series[shap_series < 0].nsmallest(ntop)
+        
+        st.subheader("Top Features Anomaly Detection", divider="gray")
+        st.write("The following variable contributed the most to flag the selected \
+                survey as an anomaly")
 
-            for feature, shap_value in negative_shap_df.items():
-                feature_label = st.session_state.variable_mapping.get(feature, feature)
-                feature_comment = st.session_state.variable_meaning.get(feature, "No comment available.")
-                feature_value = feature_data[feature].values[0]
-                full_string = f"- **{feature_label} = {feature_value:.0f}** \
-                              (**SHAP value = {shap_value:.2f}**) \
-                              {feature_comment}: is below/above its average \
-                              **\u03BC = {int(data[feature].mean())} +/- {int(data[feature].std())}**."
-                st.markdown(full_string)
-            st.markdown("<hr style='height:2px; background-color: gray; border: none;' />", 
-                        unsafe_allow_html=True)
-      
-         
-    #nb_features = shap_values.data.shape[1]
+        for feature, shap_value in negative_shap_df.items():
+            feature_label = st.session_state.variable_mapping.get(feature, feature)
+            feature_comment = st.session_state.variable_meaning.get(feature, "No comment available.")
+            feature_value = feature_data[feature].values[0]
+            full_string = f"- **{feature_label} = {feature_value:.0f}** \
+                          (**SHAP value = {shap_value:.2f}**) \
+                          {feature_comment}: is below/above its average \
+                          **\u03BC = {int(data[feature].mean())} +/- {int(data[feature].std())}**."
+            st.markdown(full_string)
+        st.markdown("<hr style='height:2px; background-color: gray; border: none;' />", 
+                    unsafe_allow_html=True)
+
     index_survey = data[data[survey_id_var] == selected_survey].index[0]
     shap_index_survey = data.index.get_loc(index_survey)
     
@@ -582,23 +595,32 @@ def id_survey_shap_bar_plot_interactive(survey_id_var, selected_survey, data, sh
     shap_df = pd.DataFrame({
         'Feature': feature_label,
         'SHAP Value': shap_values_data
-    }).sort_values(by='SHAP Value', ascending=True)
-
-    chart = alt.Chart(shap_df).mark_bar().encode(
-        y=alt.Y('Feature:N', sort=None, axis=alt.Axis(labelFontSize=14, labelAngle=0)),  
-        x='SHAP Value:Q',
-        tooltip=['Feature', 'SHAP Value']
-    ).properties(
-        title=f'SHAP Values for Survey ID: {selected_survey}',
-        width=1200,
-        height=800
-    ).configure_mark(
-        opacity=0.8,
-        color='skyblue'
-    )
-
+    })
+    
     display_top_negative_shap_values(shap_index_survey, shap_values, data, ntop=5)
-    st.altair_chart(chart, use_container_width=True)    
+
+    if alt_plot:
+        chart = alt.Chart(shap_df).mark_bar().encode(
+                y=alt.Y('Feature:N', sort='x', axis=alt.Axis(labelFontSize=16, labelAngle=0)),  
+                x='SHAP Value:Q',
+                tooltip=['Feature', 'SHAP Value']
+            ).properties(
+                title=f'SHAP Values for Survey ID: {selected_survey}',
+                width=1200,
+                height=800
+            ).configure_mark(
+                opacity=0.8,
+                color='skyblue'
+            )
+        st.altair_chart(chart, use_container_width=True) 
+    else:
+        shap_df = shap_df.sort_values(by='SHAP Value', ascending=False)
+        fig = px.bar(shap_df, x='SHAP Value', y='Feature', orientation='h',
+                 title=f'SHAP Values for Survey ID: {selected_survey}',
+                 labels={'SHAP Value': 'SHAP Value', 'Feature': 'Feature'},
+                 color_discrete_sequence=['skyblue'], opacity=0.8)
+        fig.update_layout(height=800, width=1200, yaxis_tickfont=dict(size=16))
+        st.plotly_chart(fig, use_container_width=True)
 
 
 def generate_palette_colors(num_colors):
