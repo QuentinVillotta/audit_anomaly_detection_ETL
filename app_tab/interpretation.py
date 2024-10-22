@@ -5,6 +5,7 @@ import shap
 import streamlit.components.v1 as components
 import matplotlib.pyplot as plt
 from app_utils import plot_tools as pt
+import plotly.express as px
 
 # Params
 SURVEY_ID_VAR = 'audit_id'
@@ -74,15 +75,12 @@ def display():
 
                 sub_sub2_tab1, sub_sub2_tab2 = st.tabs(["Feature Importance", "Force Plot"])
                 with sub_sub2_tab1:
-                    pt.id_survey_shap_bar_plot_interactive2(SURVEY_ID_VAR, selected_survey, features_label, shap_values)
+                    pt.id_survey_shap_bar_plot_interactive(SURVEY_ID_VAR, selected_survey, features_label, shap_values)
                 with sub_sub2_tab2:
                     pt.id_survey_shap_force_plot(survey_id_var=SURVEY_ID_VAR, selected_survey=selected_survey, data=features_label, shap_values=shap_values)
 
         with sub_tab2:
-            nb_features = len(features.columns)
-            fig, ax = plt.subplots()
-            shap.plots.bar(shap_values, max_display=nb_features, show=False, ax=ax)
-            st.pyplot(fig)
+            pt.make_global_shap(shap_values, features)
 
         with sub_tab3:
             pt.make_subheader(f"Enumerators without anomalies: {', '.join(map(str, enumerators_without_anomalies))}")
