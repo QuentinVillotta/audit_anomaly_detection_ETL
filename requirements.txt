@@ -1,7 +1,7 @@
 kedro==0.19.3
 kedro-datasets==2.1.0
 kedro-viz==8.0.1
-scikit-learn==1.4.1.post1
+scikit-learn==1.5.1#1.4.1.post1
 shap==0.45.0
 pyarrow==15.0.1
 openpyxl==3.1.2
