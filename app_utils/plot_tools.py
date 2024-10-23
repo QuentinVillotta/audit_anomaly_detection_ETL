@@ -577,10 +577,10 @@ def id_survey_shap_bar_plot_interactive(survey_id_var, selected_survey, data, sh
             feature_label = st.session_state.variable_mapping.get(feature, feature)
             feature_comment = st.session_state.variable_meaning.get(feature, "No comment available.")
             feature_value = feature_data[feature].values[0]
-            full_string = f"- **{feature_label} = {feature_value:.0f}** \
+            full_string = f"- **{feature_label} = {feature_value:.2f}** \
                           (**SHAP value = {shap_value:.2f}**) \
-                          {feature_comment}: is below/above its average \
-                          **\u03BC = {int(data[feature].mean())} +/- {int(data[feature].std())}**."
+                          {feature_comment}: the survey value could be significatly below/above its average \
+                          **\u03BC = {data[feature].mean():.2f} +/- {data[feature].std():.2f}**."
             st.markdown(full_string)
         st.markdown("<hr style='height:2px; background-color: gray; border: none;' />", 
                     unsafe_allow_html=True)
