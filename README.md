@@ -57,6 +57,34 @@ docker run -p 8501:8501 -p 8787:8787 qvillo/audit_anomaly_detection_app
 
 Once the container is running, open your web browser and go to: [http://localhost:8501](http://localhost:8501) to access the application.
 
+## Requirements 
+To download and process the audit files go to the Run anomaly detection tab and fill out the required informations on the configuration form:
+
+1. **Kobo project assetID**
+   Enter KoBo Project ID (asset_uid): you can find it on your unique URL on the kobo server
+   ```bash
+   https://kobo_url/#/forms/{asset_uid}/summary
+   ```
+   
+2. **Select the Kobo Server**
+   Enter the kobo server endpoint:
+   ```
+   eu.kobotoolbox.org
+   ```
+   
+3. **Upload kobo credentials in a yml or yaml format**
+The kobo credentials must have the following format:
+```bash
+kobo_credentials: "Token your_personal_token"
+```
+You can retrieve your token directly in your [KoboToolBox account settings](https://support.kobotoolbox.org/api.html)
+
+4. **Enumerator ID**
+   Enter the enumerator ID node variable name used in the Kobo tool to identify the enumerators
+   ```
+   G_basic_information/enumerator_id
+   ```
+
 ## License
 
 This project is licensed under the MIT License.
