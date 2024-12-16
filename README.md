@@ -17,6 +17,7 @@ To run the application, you need to have:
 1. **Audits**: Set the parameter `track-changes` in order to track changes during the Data Collection.
    - Example: Add `track-changes=TRUE` to the audit row in the column called `parameter`.
 2. **Docker**: Ensure Docker is installed on your machine. Below is a step-by-step guide to install Docker:
+3. **Python**: Use version 3.10.9 for compatibility with Kedro  
 
 ## Docker Installation Guide
 
